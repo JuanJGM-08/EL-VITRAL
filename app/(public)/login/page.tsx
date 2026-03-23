@@ -25,7 +25,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        router.push('/'); // Lleva al inicio despues del login
+        router.push('/');
       } else {
         setError(data.error || 'Error al iniciar sesión');
       }
@@ -37,61 +37,112 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Iniciar Sesión
-          </h2>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        
+        <div className="mb-4 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-primary transition-colors"
+          >
+            <span className="material-symbols-outlined text-base mr-1">arrow_back</span>
+            Volver al inicio
+          </Link>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center">
-              {error}
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Correo electrónico"
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Contraseña"
-              />
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {loading ? 'Iniciando...' : 'Iniciar Sesión'}
-            </button>
-          </div>
+        <h2 className="text-center text-3xl font-extrabold text-primary">
+          Iniciar Sesión
+        </h2>
+      </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              ¿No tienes cuenta?{' '}
-              <Link href="/registro" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Regístrate
-              </Link>
-            </p>
-          </div>
-        </form>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        
+        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded text-center">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Correo electrónico
+              </label>
+              <div className="mt-1">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
+                  placeholder-gray-400 dark:placeholder-gray-500
+                  focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary 
+                  sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Contraseña
+              </label>
+              <div className="mt-1">
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
+                  placeholder-gray-400 dark:placeholder-gray-500
+                  focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary 
+                  sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div></div>
+              <div className="text-sm">
+                <Link
+                  href="/olvide-password"
+                  className="font-medium text-primary hover:text-secondary"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white 
+                bg-primary hover:bg-secondary 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary 
+                disabled:opacity-50 transition"
+              >
+                {loading ? 'Iniciando...' : 'Iniciar Sesión'}
+              </button>
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                ¿No tienes cuenta?{' '}
+                <Link
+                  href="/registro"
+                  className="font-medium text-primary hover:text-secondary"
+                >
+                  Regístrate
+                </Link>
+              </p>
+            </div>
+
+          </form>
+        </div>
       </div>
     </div>
   );
