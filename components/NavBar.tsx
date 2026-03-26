@@ -96,6 +96,15 @@ export default function Navbar() {
             >
               Cotizar
             </Link>
+            <Link 
+              href="/sobre-nosotros" 
+              className={`font-medium ${
+                pathname === '/sobre-nosotros' ? 'text-primary' : 'text-gray-700 dark:text-gray-200'
+                }`}
+                onClick={closeMenu}
+              >
+                Sobre Nosotros  
+              </Link>  
             {user && (
               <>
                 <Link
@@ -205,12 +214,14 @@ export default function Navbar() {
                     <Link href="/" className="block px-4 py-2 text-sm" onClick={closeMenu}>Inicio</Link>
                     <Link href="/catalogo" className="block px-4 py-2 text-sm" onClick={closeMenu}>Catálogo</Link>
                     <Link href="/cotizar" className="block px-4 py-2 text-sm" onClick={closeMenu}>Cotizar</Link>
+                    <Link href="/sobre-nosotros" className="block px-4 py-2 text-sm" onClick={closeMenu}>Sobre Nosotros</Link>
                     <Link href="/login" className="block px-4 py-2 text-sm" onClick={closeMenu}>Iniciar Sesión</Link>
                     <Link href="/registro" className="block px-4 py-2 text-sm" onClick={closeMenu}>Registrarse</Link>
                   </>
                 ) : (
                   <>
                     <div className="px-4 py-2 text-sm text-gray-500 border-b">Hola, {user.nombre}</div>
+                    <Link href="/sobre-nosotros" className="block px-4 py-2 text-sm" onClick={closeMenu}>Sobre Nosotros</Link>
                     <Link href="/mis-pedidos" className="block px-4 py-2 text-sm" onClick={closeMenu}>Mis Pedidos</Link>
                     {user.rol === 'admin' && (
                       <Link href="/admin" className="block px-4 py-2 text-sm" onClick={closeMenu}>Admin</Link>
