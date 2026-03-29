@@ -36,7 +36,6 @@ CREATE TABLE cotizaciones (
     direccion_cliente TEXT,
     fecha_cotizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     subtotal DECIMAL(10,2),
-    iva DECIMAL(10,2),
     total DECIMAL(10,2),
     estado ENUM('vigente', 'aprobada', 'rechazada', 'convertida') DEFAULT 'vigente',
     codigo_unico VARCHAR(50) UNIQUE,

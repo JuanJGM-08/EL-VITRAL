@@ -113,15 +113,6 @@ export default function Navbar() {
             </Link>
             {user && (
               <>
-                <Link
-                  href="/mis-pedidos"
-                  className={`font-medium ${
-                    pathname === '/mis-pedidos' ? 'text-primary' : 'text-gray-700 dark:text-gray-200'
-                  }`}
-                  onClick={closeMenu}
-                >
-                  Mis Pedidos
-                </Link>
                 {user.rol === 'admin' && (
                   <Link
                     href="/admin"
@@ -185,6 +176,13 @@ export default function Navbar() {
                       onClick={closeMenu}
                     >
                       Mis Pedidos
+                    </Link>
+                    <Link
+                      href="/cotizaciones"
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={closeMenu}
+                    >
+                      Cotizaciones
                     </Link>
                     {user.rol === 'admin' && (
                       <Link

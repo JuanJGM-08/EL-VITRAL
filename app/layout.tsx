@@ -6,7 +6,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'El Vitral - Glassware & Installations',
+  title: 'El Vitral',
   description: 'Descubre nuestras instalaciones de vidrio',
 }
 

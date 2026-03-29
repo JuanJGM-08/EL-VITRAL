@@ -1,9 +1,35 @@
-import React from 'react';
+'use client';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
+import { useRouter } from 'next/navigation';
 
 export default function LandingPage() {
+  const router = useRouter();
+  const [filtros, setFiltros] = useState({
+    tipoVidrio: '',
+    aplicacion: '',
+    servicio: ''
+  });
+
+  const handleFiltroChange = (campo: string, valor: string) => {
+    setFiltros(prev => ({
+      ...prev,
+      [campo]: valor
+    }));
+  };
+
+  const handleBuscar = () => {
+    // Redirigir al catálogo con los filtros aplicados
+    const params = new URLSearchParams();
+    if (filtros.tipoVidrio) params.set('tipo', filtros.tipoVidrio);
+    if (filtros.aplicacion) params.set('aplicacion', filtros.aplicacion);
+    if (filtros.servicio) params.set('servicio', filtros.servicio);
+
+    router.push(`/catalogo${params.toString() ? '?' + params.toString() : ''}`);
+  };
+
   return (
     <>
       { }
@@ -28,7 +54,11 @@ export default function LandingPage() {
           <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-xl flex flex-col md:flex-row gap-2">
             { }
             <div className="flex-1 relative">
-              <select className="w-full h-14 pl-4 pr-10 appearance-none bg-transparent border-0 border-b-2 md:border-b-0 md:border-r-2 border-gray-200 dark:border-gray-700 focus:ring-0 text-black dark:text-white font-medium text-lg cursor-pointer">
+              <select
+                value={filtros.tipoVidrio}
+                onChange={(e) => handleFiltroChange('tipoVidrio', e.target.value)}
+                className="w-full h-14 pl-4 pr-10 appearance-none bg-transparent border-0 border-b-2 md:border-b-0 md:border-r-2 border-gray-200 dark:border-gray-700 focus:ring-0 text-black dark:text-white font-medium text-lg cursor-pointer"
+              >
                 <option value="">Tipo de Vidrio</option>
                 <option value="templado">Vidrio Templado</option>
                 <option value="laminado">Vidrio Laminado</option>
@@ -39,28 +69,39 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="flex-1 relative">
-              <select className="w-full h-14 pl-4 pr-10 appearance-none bg-transparent border-0 border-b-2 md:border-b-0 md:border-r-2 border-gray-200 dark:border-gray-700 focus:ring-0 text-black-700 dark:text-black-200 font-medium text-lg cursor-pointer">
+              <select
+                value={filtros.aplicacion}
+                onChange={(e) => handleFiltroChange('aplicacion', e.target.value)}
+                className="w-full h-14 pl-4 pr-10 appearance-none bg-transparent border-0 border-b-2 md:border-b-0 md:border-r-2 border-gray-200 dark:border-gray-700 focus:ring-0 text-black dark:text-white font-medium text-lg cursor-pointer"
+              >
                 <option value="">Aplicación</option>
                 <option value="ventanas">Ventanas</option>
                 <option value="puertas">Puertas</option>
                 <option value="divisiones">Divisiones</option>
               </select>
-              <span className="material-symbols-outlined absolute right-4 top-4 text-black-500 pointer-events-none">
+              <span className="material-symbols-outlined absolute right-4 top-4 text-black dark:text-white pointer-events-none">
                 expand_more
               </span>
             </div>
             <div className="flex-1 relative">
-              <select className="w-full h-14 pl-4 pr-10 appearance-none bg-transparent border-0 focus:ring-0 text-black-700 dark:text-black-200 font-medium text-lg cursor-pointer">
+              <select
+                value={filtros.servicio}
+                onChange={(e) => handleFiltroChange('servicio', e.target.value)}
+                className="w-full h-14 pl-4 pr-10 appearance-none bg-transparent border-0 focus:ring-0 text-black dark:text-white font-medium text-lg cursor-pointer"
+              >
                 <option value="">Servicios</option>
                 <option value="fabricacion">Fabricación</option>
                 <option value="instalacion">Instalación</option>
                 <option value="mantenimiento">Mantenimiento</option>
               </select>
-              <span className="material-symbols-outlined absolute right-4 top-4 text-black-500 pointer-events-none">
+              <span className="material-symbols-outlined absolute right-4 top-4 text-black dark:text-white pointer-events-none">
                 expand_more
               </span>
             </div>
-            <button className="bg-primary hover:bg-secondary text-white font-bold h-14 px-10 rounded-md transition-colors text-lg w-full md:w-auto">
+            <button
+              onClick={handleBuscar}
+              className="bg-primary hover:bg-secondary text-white font-bold h-14 px-10 rounded-md transition-colors text-lg w-full md:w-auto"
+            >
               Buscar
             </button>
           </div>

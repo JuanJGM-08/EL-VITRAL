@@ -4,14 +4,32 @@ import { getUserFromRequest } from '@/lib/auth';
 
 function calcularPrecio(producto: any, datos: any): number {
   const precioBase = producto.precio_base;
-  let factor = 1;
   if (producto.tipo === 'vidrio' || producto.tipo === 'espejo') {
-    const area = (datos.medida_largo * datos.medida_ancho) / 10000;
-    factor = area * (datos.grosor ? datos.grosor / 4 : 1);
+    // Precio por metro cuadrado: precio_base es el precio por m²
+    const area = (datos.medida_largo * datos.medida_ancho) / 10000; // Convertir cm² a m²
+    return precioBase * area * datos.cantidad;
   } else if (producto.tipo === 'aluminio') {
-    factor = datos.medida_largo / 100;
+    return precioBase * (datos.medida_largo / 100) * datos.cantidad; // precio por metro lineal
   }
-  return precioBase * factor * datos.cantidad;
+  return precioBase * datos.cantidad;
+}
+
+export async function GET(request: NextRequest) {
+  const user = getUserFromRequest(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
+  try {
+    const cotizaciones = await query(
+      'SELECT * FROM cotizaciones WHERE usuario_id = ? ORDER BY fecha_cotizacion DESC',
+      [(user as any).id]
+    );
+    return NextResponse.json(cotizaciones);
+  } catch (error) {
+    console.error('Error al obtener cotizaciones:', error);
+    return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -33,22 +51,20 @@ export async function POST(request: NextRequest) {
         cantidad: item.cantidad,
         medida_largo: item.medida_largo,
         medida_ancho: item.medida_ancho,
-        grosor: item.grosor,
         precio_unitario: precio / item.cantidad,
         subtotal: precio,
         descripcion: producto.nombre,
       });
     }
 
-    const iva = subtotal * 0.19;
-    const total = subtotal + iva;
+    const total = subtotal; // Total sin IVA
     const codigo = `COT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const result = await query(
       `INSERT INTO cotizaciones 
-       (usuario_id, nombre_cliente, email_cliente, telefono_cliente, direccion_cliente, subtotal, iva, total, codigo_unico)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [user ? (user as any).id : null, cliente.nombre, cliente.email, cliente.telefono, cliente.direccion, subtotal, iva, total, codigo]
+       (usuario_id, nombre_cliente, email_cliente, telefono_cliente, direccion_cliente, subtotal, total, codigo_unico)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [user ? (user as any).id : null, cliente.nombre, cliente.email, cliente.telefono, cliente.direccion, subtotal, total, codigo]
     );
 
     const cotizacionId = (result as any).insertId;
@@ -56,15 +72,19 @@ export async function POST(request: NextRequest) {
     for (const det of detalles) {
       await query(
         `INSERT INTO cotizacion_detalles 
-         (cotizacion_id, producto_id, descripcion, cantidad, medida_largo, medida_ancho, grosor, precio_unitario, subtotal)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [cotizacionId, det.producto_id, det.descripcion, det.cantidad, det.medida_largo, det.medida_ancho, det.grosor, det.precio_unitario, det.subtotal]
+         (cotizacion_id, producto_id, descripcion, cantidad, medida_largo, medida_ancho, precio_unitario, subtotal)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [cotizacionId, det.producto_id, det.descripcion, det.cantidad, det.medida_largo, det.medida_ancho, det.precio_unitario, det.subtotal]
       );
     }
 
     return NextResponse.json({ message: 'Cotización creada', codigo });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Error al crear cotización' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error detallado al crear cotización:', error);
+    console.error('Stack trace:', error.stack);
+    return NextResponse.json({
+      error: 'Error al crear cotización',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 });
   }
 }

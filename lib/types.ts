@@ -29,7 +29,6 @@ export interface Cotizacion {
   direccion_cliente?: string;
   fecha_cotizacion: Date;
   subtotal: number;
-  iva: number;
   total: number;
   estado: string;
   codigo_unico: string;

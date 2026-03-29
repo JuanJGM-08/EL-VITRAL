@@ -1,7 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['forbes.es'], // Agrega aquí los dominios que uses
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'forbes.es',
+      },
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
 };
 
