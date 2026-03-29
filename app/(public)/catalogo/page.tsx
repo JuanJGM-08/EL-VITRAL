@@ -15,6 +15,14 @@ interface Producto {
     precio_base: number;
 }
 
+//Funcion para formatear precios en pesos colombianos
+const formatPrice = (value: number): string => {
+    return new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(value);
+}
+
 export default function CatalogoPage() {
     const searchParams = useSearchParams();
     const [productos, setProductos] =useState<Producto[]>([]);
@@ -138,7 +146,7 @@ export default function CatalogoPage() {
                                 <p className="text-gray-200 mb-4">{producto.descripcion || 'Sin descripción'}</p>
                                 <div className="flex justify-between items-center">
                                     <span className="text-primary font-bold text-xl">
-                                        ${Number(producto.precio_base).toFixed(2)} {producto.unidad_medida && `/ ${producto.unidad_medida}`}
+                                        ${formatPrice(producto.precio_base)}{producto.unidad_medida && `/ ${producto.unidad_medida}`}
                                     </span>
                                     <Link
                                     href={`/cotizar?producto=${producto.id}`}

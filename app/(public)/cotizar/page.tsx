@@ -22,6 +22,13 @@ interface ItemCotizacion {
   precio: number;
 }
 
+const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat('es-CO', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
 export default function CotizarPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -158,18 +165,18 @@ export default function CotizarPage() {
 
   if (resultado) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen py-12" style={{ backgroundColor: '#101828'}}>
         <NavBar />
-        <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-3xl font-bold text-center mb-6">¡Cotización creada!</h2>
-          <div className="bg-green-50 border border-green-200 p-6 rounded-md text-center">
-            <p className="text-xl mb-4">Tu código de cotización es:</p>
+        <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md" style={{ backgroundColor: '#1e2939'}}>
+          <h2 className="text-3xl font-bold text-white text-center mb-6">¡Cotización creada!</h2>
+          <div className="bg-green-900/30 border border-green-500 p-6 rounded-md text-center">
+            <p className="text-xl text-white mb-4">Tu código de cotización es:</p>
             <p className="text-4xl font-mono font-bold text-primary">{resultado.codigo}</p>
-            <p className="text-gray-600 mt-4">Guarda este código para consultar tu cotización más tarde.</p>
+            <p className="text-gray-300 mt-4">Guarda este código para consultar tu cotización más tarde.</p>
           </div>
           <button
             onClick={() => router.push('/catalogo')}
-            className="mt-6 w-full bg-primary text-white py-2 rounded-md hover:bg-secondary transition-colors"
+            className="mt-6 w-full bg-primary text-blue-400 py-2 rounded-md hover:bg-secondary transition-colors"
           >
             Seguir explorando
           </button>
@@ -179,59 +186,59 @@ export default function CotizarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen py-12" style={{ backgroundColor: '#101828'}}>
       <NavBar />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">Cotización en Línea</h1>
+        <h1 className="text-4xl font-bold text-white mb-8">Cotización en Línea</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {}
+          {/* Datos del cliente */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Tus datos</h2>
+            <div className="rounded-lg shadow-md p-6" style={{ backgroundColor: '#1e2939'}}>
+              <h2 className="text-xl font-bold text-white mb-4">Tus datos</h2>
               <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="Nombre completo *"
                   value={cliente.nombre}
                   onChange={(e) => setCliente({...cliente, nombre: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-gray-800 text-white placeholder-gray-400"
                 />
                 <input
                   type="email"
                   placeholder="Email *"
                   value={cliente.email}
                   onChange={(e) => setCliente({...cliente, email: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-gray-800 text-white placeholder-gray-400"
                 />
                 <input
                   type="tel"
                   placeholder="Teléfono *"
                   value={cliente.telefono}
                   onChange={(e) => setCliente({...cliente, telefono: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-gray-800 text-white placeholder-gray-400"
                 />
                 <input
                   type="text"
                   placeholder="Dirección *"
                   value={cliente.direccion}
                   onChange={(e) => setCliente({...cliente, direccion: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-gray-800 text-white placeholder-gray-400"
                 />
               </div>
             </div>
           </div>
 
-          {}
+          {/* Agregar productos */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Agregar productos</h2>
+            <div className="rounded-lg shadow-md p-6" style={{ backgroundColor: '#1e2939'}}>
+              <h2 className="text-xl font-bold text-white mb-4">Agregar productos</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <select
                   value={productoActual.producto_id}
                   onChange={(e) => setProductoActual({...productoActual, producto_id: e.target.value})}
-                  className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-gray-800 text-white"
                 >
                   <option value="">Seleccionar producto</option>
                   {productos.map(p => (
@@ -246,7 +253,7 @@ export default function CotizarPage() {
                       placeholder="Largo (cm)"
                       value={productoActual.medida_largo}
                       onChange={(e) => setProductoActual({...productoActual, medida_largo: e.target.value})}
-                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-gray-800 text-white placeholder-gray-400"
                     />
                     {(() => {
                       const producto = productos.find(p => p.id === parseInt(productoActual.producto_id));
@@ -256,7 +263,7 @@ export default function CotizarPage() {
                           placeholder="Ancho (cm)"
                           value={productoActual.medida_ancho}
                           onChange={(e) => setProductoActual({...productoActual, medida_ancho: e.target.value})}
-                          className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          className="px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-gray-800 text-white placeholder-gray-400" 
                         />
                       ) : null;
                     })()}
@@ -266,7 +273,7 @@ export default function CotizarPage() {
                       min="1"
                       value={productoActual.cantidad}
                       onChange={(e) => setProductoActual({...productoActual, cantidad: parseInt(e.target.value)})}
-                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-gray-800 text-white placeholder-gray-400"
                     />
                   </>
                 )}
@@ -274,30 +281,30 @@ export default function CotizarPage() {
 
               <button
                 onClick={agregarItem}
-                className="mt-4 bg-primary text-white px-6 py-2 rounded-md hover:bg-secondary transition-colors"
+                className="mt-4 bg-primary text-blue-400 px-6 py-2 rounded-md hover:bg-secondary transition-colors"
               >
-                Agregar producto
+                Agregar Producto
               </button>
 
               {}
               {items.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="font-bold mb-4">Productos seleccionados</h3>
+                  <h3 className="font-bold text-white mb-4">Productos Seleccionados</h3>
                   <div className="space-y-2">
                     {items.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                      <div key={index} className="flex justify-between items-center p-3 rounded-md" style={{ backgroundColor: '#0f172a'}}>
                         <div>
-                          <p className="font-medium">{item.nombre}</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="font-medium text-white">{item.nombre}</p>
+                          <p className="text-sm text-gray-300">
                             {item.medida_largo && `${item.medida_largo}x${item.medida_ancho} cm `}
                             x {item.cantidad} und
                           </p>
                         </div>
                         <div className="flex items-center gap-4">
-                          <span className="font-bold">${parseFloat(item.precio.toString()).toFixed(2)}</span>
+                          <span className="font-bold text-primary">${formatNumber(item.precio)}</span>
                           <button
                             onClick={() => eliminarItem(index)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-400 hover:text-red-300"
                           >
                             ✕
                           </button>
@@ -307,17 +314,17 @@ export default function CotizarPage() {
                   </div>
 
                   {/* Totales */}
-                  <div className="mt-6 p-4 bg-gray-100 rounded-md">
+                  <div className="mt-6 p-4 rounded-md" style={{ backgroundColor:'#0f172a' }}>
                     <div className="flex justify-between text-lg">
-                      <span>Total:</span>
-                      <span className="font-bold text-primary">${parseFloat(totales.total.toString()).toFixed(2)}</span>
+                      <span className='text-white'>Total:</span>
+                      <span className="font-bold text-primary">${formatNumber(totales.total)}</span>
                     </div>
                   </div>
 
                   <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="mt-4 w-full bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                    className="mt-4 w-full bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-500"
                   >
                     {loading ? 'Procesando...' : 'Generar Cotización'}
                   </button>
