@@ -15,6 +15,7 @@ interface Producto {
 export default function AdminProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchProductos();
@@ -23,10 +24,26 @@ export default function AdminProductosPage() {
   const fetchProductos = async () => {
     try {
       const res = await fetch('/api/admin/productos', { credentials: 'include' });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        const message = errorData?.error || `${res.status} ${res.statusText}`;
+        setError(`No autorizado: ${message}`);
+        setProductos([]);
+        return;
+      }
+
       const data = await res.json();
+      if (!Array.isArray(data)) {
+        setError('Datos de productos inválidos');
+        setProductos([]);
+        return;
+      }
+
       setProductos(data);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
+      setError('Error al cargar productos');
+      setProductos([]);
     } finally {
       setLoading(false);
     }
@@ -128,9 +145,14 @@ export default function AdminProductosPage() {
           </Link>
         </div>
 
-        <div className="bg-white rounded-xl shadow">
-          <table className="w-full">
-            <thead className="bg-gray-100">
+        {error ? (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-6 text-red-700">
+            {error}
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow">
+            <table className="w-full">
+              <thead className="bg-gray-100">
               <tr>
                 <th className="p-4">Producto</th>
                 <th className="p-4">Descripción</th>
@@ -181,6 +203,7 @@ export default function AdminProductosPage() {
             </tbody>
           </table>
         </div>
+      )}
       </div>
     </div>
   );

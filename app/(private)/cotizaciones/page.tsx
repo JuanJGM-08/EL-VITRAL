@@ -17,6 +17,8 @@ interface Cotizacion {
 export default function CotizacionesPage() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchCotizaciones();
@@ -61,6 +63,24 @@ export default function CotizacionesPage() {
     } catch (error) {
       console.error('Error:', error);
       alert('Error al conectar con el servidor');
+    }
+  };
+
+  const verDetalles = async (codigo: string) => {
+    try {
+      const res = await fetch(`/api/cotizaciones/${encodeURIComponent(codigo)}`);
+      if (!res.ok) {
+        alert('No se pudieron cargar los detalles de la cotización');
+        return;
+      }
+      const data = await res.json();
+      setSelectedCotizacion(data);
+      setShowModal(true);
+    } catch (error) {
+      console.error('Error cargando detalles:', error);
+      alert('Error al cargar detalles');
+    } finally {
+      setLoadingDetails(false);
     }
   };
 
@@ -148,14 +168,12 @@ export default function CotizacionesPage() {
                             Convertir a Pedido
                           </button>
                         )}
-                        <a
-                          href={`/consulta-cotizacion?codigo=${cotizacion.codigo_unico}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => verDetalles(cotizacion.codigo_unico)}
                           className="text-blue-600 hover:text-blue-900"
                         >
                           Ver Detalles
-                        </a>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -165,6 +183,56 @@ export default function CotizacionesPage() {
           </div>
         )}
       </div>
+
+      {showModal && selectedCotizacion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Detalle de cotización</h2>
+                <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+              </div>
+
+              <div className="mb-4">
+                <p><strong>Código:</strong> {selectedCotizacion.codigo_unico}</p>
+                <p><strong>Cliente:</strong> {selectedCotizacion.nombre_cliente}</p>
+                <p><strong>Email:</strong> {selectedCotizacion.email_cliente}</p>
+                <p><strong>Teléfono:</strong> {selectedCotizacion.telefono_cliente || 'No especificado'}</p>
+                <p><strong>Fecha:</strong> {new Date(selectedCotizacion.fecha_cotizacion).toLocaleDateString()}</p>
+                <p><strong>Estado:</strong> {selectedCotizacion.estado}</p>
+              </div>
+
+              <h3 className="font-bold mb-2">Productos</h3>
+              <div className="overflow-x-auto mb-4">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2 text-xs">Descripción</th>
+                      <th className="p-2 text-xs">Medidas</th>
+                      <th className="p-2 text-xs">Cantidad</th>
+                      <th className="p-2 text-xs">Precio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedCotizacion.detalles?.map((det, i) => (
+                      <tr key={i} className="border-b">
+                        <td className="p-2">{det.descripcion}</td>
+                        <td className="p-2">{det.medida_largo && det.medida_ancho ? `${det.medida_largo}x${det.medida_ancho} cm` : 'No aplica'}</td>
+                        <td className="p-2">{det.cantidad}</td>
+                        <td className="p-2">${Number(det.subtotal).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="text-right">
+                <p className="text-xl font-bold">Total: ${Number(selectedCotizacion.total).toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

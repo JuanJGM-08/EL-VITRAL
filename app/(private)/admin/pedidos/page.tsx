@@ -39,6 +39,7 @@ const colorEstado: Record<Pedido['estado'], string> = {
 export default function AdminPedidosPage() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchPedidos();
@@ -50,14 +51,23 @@ export default function AdminPedidosPage() {
         credentials: 'include'
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setPedidos(data);
-      } else {
-        console.error('Error en la respuesta:', res.status, res.statusText);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        setError(errorData?.error || `Error en la respuesta: ${res.status} ${res.statusText}`);
+        setPedidos([]);
+        return;
       }
-    } catch (error) {
-      console.error('Error al cargar pedidos:', error);
+
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        setError('Datos de pedidos inválidos');
+        setPedidos([]);
+      } else {
+        setPedidos(data);
+      }
+    } catch (err) {
+      console.error('Error al cargar pedidos:', err);
+      setError('Error al cargar pedidos');
     } finally {
       setLoading(false);
     }
@@ -145,7 +155,11 @@ export default function AdminPedidosPage() {
           </Link>
         </div>
 
-        {pedidos.length === 0 ? (
+        {error ? (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-6 text-red-700 mb-6">
+            {error}
+          </div>
+        ) : pedidos.length === 0 ? (
           <div className="rounded-2xl bg-white p-10 shadow-sm border border-gray-100 text-center">
             <p className="text-gray-500 text-lg">No hay pedidos registrados</p>
           </div>
