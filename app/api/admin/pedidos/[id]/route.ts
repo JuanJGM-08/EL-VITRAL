@@ -12,18 +12,27 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const { id } = await params; 
     const body = await request.json();
-    const { estado } = body;
+    const { estado, pago } = body;
 
-    if (!estado) {
-      return NextResponse.json({ error: 'Estado requerido' }, { status: 400 });
+    if (!estado && !pago) {
+      return NextResponse.json({ error: 'Estado o pago requerido' }, { status: 400 });
     }
 
-    await query(
-      'UPDATE pedidos SET estado = ? WHERE id = ?',
-      [estado, id]
-    );
+    if (estado) {
+      await query(
+        'UPDATE pedidos SET estado = ? WHERE id = ?',
+        [estado, id]
+      );
+    }
 
-    return NextResponse.json({ message: 'Estado actualizado correctamente' });
+    if (pago) {
+      await query(
+        'UPDATE pedidos SET pago = ? WHERE id = ?',
+        [pago, id]
+      );
+    }
+
+    return NextResponse.json({ message: 'Pedido actualizado correctamente' });
   } catch (error) {
     console.error('Error al actualizar pedido:', error);
     return NextResponse.json(

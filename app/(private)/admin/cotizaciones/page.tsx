@@ -32,6 +32,15 @@ export default function AdminCotizacionesPage() {
   const [showModal, setShowModal] = useState(false);
   const [convertingId, setConvertingId] = useState<number | null>(null);
 
+  // Estado para el modal de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [cotizacionToConvert, setCotizacionToConvert] = useState<Cotizacion | null>(null);
+
+  // Estados para modales de resultado
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
   useEffect(() => {
     fetchCotizaciones();
   }, []);
@@ -85,35 +94,44 @@ export default function AdminCotizacionesPage() {
     setSelectedCotizacion(null);
   };
 
-  const convertirAPedido = async (cotizacionId: number) => {
-    if (!confirm('¿Estás seguro de que quieres convertir esta cotización en pedido?')) {
-      return;
-    }
+  const convertirAPedido = async (cotizacion: Cotizacion) => {
+    setCotizacionToConvert(cotizacion);
+    setShowConfirmModal(true);
+  };
 
-    setConvertingId(cotizacionId);
+  const confirmarConversion = async () => {
+    if (!cotizacionToConvert) return;
+
+    setConvertingId(cotizacionToConvert.id);
+    setShowConfirmModal(false);
+
     try {
       const res = await fetch('/api/pedidos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cotizacion_id: cotizacionId,
+          cotizacion_id: cotizacionToConvert.id,
           fecha_entrega: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         })
       });
 
       if (res.ok) {
-        alert('Cotización convertida a pedido exitosamente');
+        setModalMessage('Cotización convertida a pedido exitosamente');
+        setShowSuccessModal(true);
         closeModal();
         fetchCotizaciones();
       } else {
         const error = await res.json();
-        alert(error.error || 'Error al convertir la cotización');
+        setModalMessage(error.error || 'Error al convertir la cotización');
+        setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al conectar con el servidor');
+      setModalMessage('Error al conectar con el servidor');
+      setShowErrorModal(true);
     } finally {
       setConvertingId(null);
+      setCotizacionToConvert(null);
     }
   };
 
@@ -310,7 +328,7 @@ export default function AdminCotizacionesPage() {
               <div className="mt-4 flex gap-2 justify-end">
                 {selectedCotizacion.estado !== 'convertida' && (
                   <button
-                    onClick={() => convertirAPedido(selectedCotizacion.id)}
+                    onClick={() => convertirAPedido(selectedCotizacion)}
                     disabled={convertingId === selectedCotizacion.id}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors disabled:bg-gray-500"
                   >
@@ -322,6 +340,111 @@ export default function AdminCotizacionesPage() {
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors"
                 >
                   Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación */}
+      {showConfirmModal && cotizacionToConvert && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="rounded-lg shadow-xl max-w-md w-full mx-4" style={{ backgroundColor: '#1e2939' }}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-white">Confirmar conversión</h2>
+                <button
+                  onClick={() => {
+                    setShowConfirmModal(false);
+                    setCotizacionToConvert(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-200 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="text-center py-4">
+                <p className="text-gray-300 mb-6">
+                  ¿Estás seguro de que quieres convertir la cotización <strong>{cotizacionToConvert.codigo_unico}</strong> de <strong>{cotizacionToConvert.nombre_cliente}</strong> en un pedido?
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    onClick={() => {
+                      setShowConfirmModal(false);
+                      setCotizacionToConvert(null);
+                    }}
+                    className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg transition-colors border border-slate-500"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={confirmarConversion}
+                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors border border-green-500 shadow-lg shadow-green-500/25"
+                  >
+                    Confirmar Conversión
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de éxito */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="rounded-lg shadow-xl max-w-md w-full mx-4" style={{ backgroundColor: '#1e2939' }}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-green-400">¡Éxito!</h2>
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="text-gray-400 hover:text-gray-200 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="text-center py-4">
+                <div className="text-4xl mb-4">✅</div>
+                <p className="text-gray-300 mb-6">{modalMessage}</p>
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors border border-green-500 shadow-lg shadow-green-500/25"
+                >
+                  Aceptar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de error */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="rounded-lg shadow-xl max-w-md w-full mx-4" style={{ backgroundColor: '#1e2939' }}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-red-400">Error</h2>
+                <button
+                  onClick={() => setShowErrorModal(false)}
+                  className="text-gray-400 hover:text-gray-200 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="text-center py-4">
+                <div className="text-4xl mb-4">❌</div>
+                <p className="text-gray-300 mb-6">{modalMessage}</p>
+                <button
+                  onClick={() => setShowErrorModal(false)}
+                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors border border-red-500 shadow-lg shadow-red-500/25"
+                >
+                  Aceptar
                 </button>
               </div>
             </div>

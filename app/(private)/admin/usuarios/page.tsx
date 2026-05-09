@@ -140,9 +140,7 @@ export default function AdminUsuariosPage() {
                             Aprobar
                           </button>
                         )}
-                        <button className="text-blue-400 hover:text-blue-300">
-                          Editar
-                        </button>
+                        
                         <button className="text-red-400 hover:text-red-300">
                           Eliminar
                         </button>

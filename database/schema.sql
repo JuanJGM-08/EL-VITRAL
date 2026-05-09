@@ -64,6 +64,7 @@ CREATE TABLE pedidos (
     fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_entrega DATE,
     estado ENUM('pendiente', 'en_proceso', 'listo', 'entregado') DEFAULT 'pendiente',
+    pago ENUM('pendiente', 'pagado', 'anticipo') DEFAULT 'pendiente',
     total DECIMAL(10,2),
     notas TEXT,
     FOREIGN KEY (cotizacion_id) REFERENCES cotizaciones(id),
