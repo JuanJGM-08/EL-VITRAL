@@ -54,11 +54,20 @@ export async function POST(request: NextRequest) {
 
     const stockColumn = await getStockColumn();
 
-    await query(
+    const insertResult = await query(
       `INSERT INTO productos (nombre, descripcion, tipo, unidad_medida, precio_base, imagen_url, ${stockColumn}, activo)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [nombre, descripcion, tipo, unidad_medida, precio_base, imagen_url, stock, activo ? 1 : 0]
     );
+
+    const productoId = Number((insertResult as any).insertId);
+    if (productoId > 0) {
+      await query(
+        `INSERT INTO inventario (producto_id, cantidad, tipo_movimiento, descripcion, usuario_id)
+         VALUES (?, ?, 'entrada', 'Ingreso inicial de inventario al crear el producto', ?)`,
+        [productoId, Number(stock), (user as any).id]
+      );
+    }
 
     return NextResponse.json({ message: 'Producto creado' });
   } catch (error) {

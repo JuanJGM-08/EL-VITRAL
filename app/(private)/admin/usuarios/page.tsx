@@ -10,6 +10,7 @@ interface Usuario {
   direccion?: string;
   rol: string;
   aprobado: boolean;
+  ultimo_acceso?: string | null;
 }
 
 export default function AdminUsuariosPage() {
@@ -100,6 +101,9 @@ export default function AdminUsuariosPage() {
                       Rol
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Último acceso
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Estado
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
@@ -121,6 +125,9 @@ export default function AdminUsuariosPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {usuario.rol}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {usuario.ultimo_acceso ? new Date(usuario.ultimo_acceso).toLocaleString('es-ES') : 'Nunca'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

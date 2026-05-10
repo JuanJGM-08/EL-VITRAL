@@ -78,6 +78,11 @@ export default function CotizacionesPage() {
     }
   };
 
+  const descargarPdfCotizacion = (codigo: string) => {
+    const url = `/api/cotizaciones/${encodeURIComponent(codigo)}/pdf`;
+    window.open(url, '_blank');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#101828'}}>
@@ -160,9 +165,15 @@ export default function CotizacionesPage() {
                             onClick={() => convertirAPedido(cotizacion.id)}
                             className="text-primary hover:text-secondary"
                           >
-                            Llama para confirmar tu cotización
+                            Llama para confirmar
                           </button>
                         )}
+                        <button
+                          onClick={() => descargarPdfCotizacion(cotizacion.codigo_unico)}
+                          className="text-cyan-400 hover:text-cyan-300"
+                        >
+                          Descargar PDF
+                        </button>
                         <button
                           onClick={() => verDetalles(cotizacion.codigo_unico)}
                           className="text-blue-400 hover:text-blue-300"
@@ -223,6 +234,21 @@ export default function CotizacionesPage() {
 
               <div className="text-right pt-4 border-t border-gray-700">
                 <p className="text-xl font-bold text-primary">Total: ${formatNumber(selectedCotizacion.total)}</p>
+              </div>
+
+              <div className="mt-4 flex gap-2 justify-end">
+                <button
+                  onClick={() => descargarPdfCotizacion(selectedCotizacion.codigo_unico)}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Descargar PDF
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>

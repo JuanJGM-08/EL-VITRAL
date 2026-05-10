@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
        LEFT JOIN productos p ON d.producto_id = p.id
        WHERE d.cotizacion_id = ?`,
       [pedido.cotizacion_id]
-    );
+    ) as any[];
   }
 
   return NextResponse.json({ ...pedido, cotizacion, detalles });

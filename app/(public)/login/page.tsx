@@ -32,12 +32,18 @@ export default function LoginPage() {
       return;
     }
 
+    const payload = {
+      email: email.trim().toLowerCase(),
+      password: password.trim(),
+      recaptchaToken,
+    };
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, recaptchaToken }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -114,7 +120,6 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm
@@ -134,7 +139,6 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type="password"
-                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm

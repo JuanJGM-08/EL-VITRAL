@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import NavBar from '@/components/NavBar';
 
 interface Producto {
@@ -31,9 +31,8 @@ const formatNumber = (value: number): string => {
 };
 
 export default function CotizarPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const productoInicial = searchParams.get('producto');
+  const [productoInicial, setProductoInicial] = useState<string | null>(null);
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [cliente, setCliente] = useState({
@@ -65,6 +64,11 @@ export default function CotizarPage() {
     fetch('/api/productos')
       .then(res => res.json())
       .then(setProductos);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setProductoInicial(params.get('producto'));
   }, []);
 
   useEffect(() => {

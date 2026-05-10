@@ -122,6 +122,11 @@ export default function AdminPedidosPage() {
     setShowConfirmModal(true);
   };
 
+  const descargarPdfPedido = (id: number) => {
+    const url = `/api/admin/pedidos/${id}/pdf`;
+    window.open(url, '_blank');
+  };
+
   const confirmarCambio = async () => {
     if (!confirmAction) return;
 
@@ -307,7 +312,7 @@ export default function AdminPedidosPage() {
                               </td>
 
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                   <div>
                                     <label className="block text-xs text-gray-400 mb-1">Estado del proceso</label>
                                     <select
@@ -333,6 +338,12 @@ export default function AdminPedidosPage() {
                                       <option value="pagado">Pagado</option>
                                     </select>
                                   </div>
+                                  <button
+                                    onClick={() => descargarPdfPedido(pedido.id)}
+                                    className="w-full text-left text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                                  >
+                                    Exportar PDF
+                                  </button>
                                 </div>
                               </td>
                             </tr>

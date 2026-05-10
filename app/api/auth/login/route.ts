@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { comparePassword, generateToken, hashPassword } from '@/lib/auth';
+import { comparePassword, generateToken, hashPassword, sanitizeEmail, sanitizeString } from '@/lib/auth';
 
 async function verifyRecaptcha(token: string) {
   const secret = process.env.RECAPTCHA_SECRET_KEY || '';
@@ -17,10 +17,23 @@ async function verifyRecaptcha(token: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, recaptchaToken } = await request.json();
+    const { email: rawEmail, password: rawPassword, recaptchaToken: rawRecaptchaToken } = await request.json();
+    let email: string;
+    try {
+      email = sanitizeEmail(rawEmail);
+    } catch {
+      return NextResponse.json({ error: 'Email inválido' }, { status: 400 });
+    }
+
+    const password = sanitizeString(rawPassword);
+    const recaptchaToken = sanitizeString(rawRecaptchaToken);
 
     if (!recaptchaToken) {
       return NextResponse.json({ error: 'Captcha no proporcionado' }, { status: 400 });
+    }
+
+    if (!password || password.length < 6) {
+      return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 400 });
     }
 
     const isHuman = await verifyRecaptcha(recaptchaToken);

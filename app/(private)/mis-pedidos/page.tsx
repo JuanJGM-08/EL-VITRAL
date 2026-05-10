@@ -70,6 +70,11 @@ export default function MisPedidosPage() {
     }
   };
 
+  const descargarPdfPedido = (pedidoId: number) => {
+    const url = `/api/pedidos/${pedidoId}/pdf`;
+    window.open(url, '_blank');
+  };
+
   if (loading) {
     return (
       
@@ -119,7 +124,13 @@ export default function MisPedidosPage() {
                           {pedido.estado}
                         </span>
                       </td>
-                      <td className="p-3">
+                      <td className="p-3 space-x-3">
+                        <button
+                          onClick={() => descargarPdfPedido(pedido.id)}
+                          className="text-cyan-400 hover:text-cyan-300"
+                        >
+                          Descargar PDF
+                        </button>
                         <button
                           onClick={() => verDetallesPedido(pedido.id)}
                           className="text-primary hover:text-secondary"
@@ -173,6 +184,21 @@ export default function MisPedidosPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              <div className="mt-4 flex gap-2 justify-end">
+                <button
+                  onClick={() => descargarPdfPedido(selectedPedido.id)}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Descargar PDF
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>

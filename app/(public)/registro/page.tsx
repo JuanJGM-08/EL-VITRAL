@@ -36,11 +36,19 @@ export default function RegistroPage() {
 
     setLoading(true);
 
+    const payload = {
+      nombre: formData.nombre.trim(),
+      email: formData.email.trim().toLowerCase(),
+      password: formData.password.trim(),
+      telefono: formData.telefono.trim(),
+      direccion: formData.direccion.trim(),
+    };
+
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -109,13 +117,12 @@ export default function RegistroPage() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 <span className="material-symbols-outlined text-base mr-2 align-middle">person</span>
-                Nombre completo *
+                Nombre completo
               </label>
               <div className="relative">
                 <input
                   name="nombre"
                   type="text"
-                  required
                   value={formData.nombre}
                   onChange={handleChange}
                   className="w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm
@@ -130,13 +137,12 @@ export default function RegistroPage() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 <span className="material-symbols-outlined text-base mr-2 align-middle">email</span>
-                Correo electrónico *
+                Correo electrónico
               </label>
               <div className="relative">
                 <input
                   name="email"
                   type="email"
-                  required
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm
@@ -151,13 +157,12 @@ export default function RegistroPage() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 <span className="material-symbols-outlined text-base mr-2 align-middle">lock</span>
-                Contraseña *
+                Contraseña
               </label>
               <div className="relative">
                 <input
                   name="password"
                   type="password"
-                  required
                   value={formData.password}
                   onChange={handleChange}
                   className="w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm

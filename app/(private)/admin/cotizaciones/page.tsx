@@ -89,6 +89,11 @@ export default function AdminCotizacionesPage() {
     }
   };
 
+  const descargarPdfCotizacion = (id: number, codigo: string) => {
+    const url = `/api/admin/cotizaciones/${id}/pdf`;
+    window.open(url, '_blank');
+  };
+
   const closeModal = () => {
     setShowModal(false);
     setSelectedCotizacion(null);
@@ -255,7 +260,13 @@ export default function AdminCotizacionesPage() {
                         </span>
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                        <button
+                          onClick={() => descargarPdfCotizacion(cotizacion.id, cotizacion.codigo_unico)}
+                          className="text-cyan-400 hover:text-cyan-300"
+                        >
+                          Exportar PDF
+                        </button>
                         <button
                           onClick={() => verDetalles(cotizacion.codigo_unico)}
                           className="text-blue-400 hover:text-blue-300"
@@ -325,7 +336,13 @@ export default function AdminCotizacionesPage() {
                 <p className="text-xl font-bold text-primary">Total: ${formatNumber(selectedCotizacion.total)}</p>
               </div>
 
-              <div className="mt-4 flex gap-2 justify-end">
+              <div className="mt-4 flex flex-wrap gap-2 justify-end">
+                <button
+                  onClick={() => descargarPdfCotizacion(selectedCotizacion.id, selectedCotizacion.codigo_unico)}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Exportar PDF
+                </button>
                 {selectedCotizacion.estado !== 'convertida' && (
                   <button
                     onClick={() => convertirAPedido(selectedCotizacion)}

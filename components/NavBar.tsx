@@ -52,6 +52,42 @@ export default function Navbar() {
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const closeMenu = () => setMenuOpen(false);
 
+  const sendLastAccess = () => {
+    const url = '/api/auth/ultimo-acceso';
+    const data = JSON.stringify({ timestamp: new Date().toISOString() });
+
+    if (navigator.sendBeacon) {
+      const blob = new Blob([data], { type: 'application/json' });
+      navigator.sendBeacon(url, blob);
+    } else {
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        keepalive: true,
+        body: data,
+      }).catch(() => {
+      });
+    }
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = () => sendLastAccess();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        sendLastAccess();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
@@ -199,7 +235,7 @@ export default function Navbar() {
                       className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={closeMenu}
                     >
-                      Cotizaciones
+                      Mis Cotizaciones
                     </Link>
                     {user.rol === 'admin' && (
                       <Link

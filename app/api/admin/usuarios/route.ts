@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   if (!user || !isAdmin(user)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
-  const usuarios = await query('SELECT id, nombre, email, telefono, direccion, rol, aprobado FROM usuarios');
+  const usuarios = await query('SELECT id, nombre, email, telefono, direccion, rol, aprobado, ultimo_acceso FROM usuarios');
   return NextResponse.json(usuarios);
 }
 
