@@ -1,21 +1,34 @@
 # Bienvenio a EL VITRAL
+
 EL VITRAL es una plataforma web para digitalizar la operación comercial de una empresa de vidrios, espejos, aluminio y herrajes. El sistema centraliza procesos que antes se hacían en papel o por llamadas: catálogo, cotizaciones, gestión de pedidos, inventario y administración de usuarios.
 
+Este repositorio se reorganizó en tres carpetas: `frontend/`, `backend/` y `docs/`.
 
-## Empezar proyecto
+Resumen
+- `frontend/` — aplicación Next.js (interfaz).
+- `backend/` — helpers, API y scripts de base de datos.
+- `docs/` — documentación y PDFs consolidados.
 
-Primero, haz correr el servidor con:
+Instalación (rápida)
+1. Instalar dependencias del frontend
 
 ```bash
-npm run dev
+cd frontend
+npm install
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) con tu navegador.
+2. Instalar dependencias del backend
 
-## Configuración del entorno
+```bash
+cd backend
+npm install
+```
 
-1. Crea un archivo `.env.local` en la raíz del proyecto.
-2. Copia los siguientes valores y pégalos en el archivo:
+## Variables de entorno
+
+- Frontend: Crea un archivo `.env.local` en `/frontend` del proyecto.
+
+1. Copia los siguientes valores y pégalos en el archivo:
 ```
 NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
 RECAPTCHA_SECRET_KEY=
@@ -23,16 +36,45 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 ```
 
 ### reCAPTCHA
-3. Genera tus claves en Google reCAPTCHA:
+2. Genera tus claves en Google reCAPTCHA:
    - Ve a https://www.google.com/recaptcha/admin
    - Registra tu sitio con reCAPTCHA v2 (Checkbox) o reCAPTCHA v3
    - Copia `SITE KEY` y `SECRET KEY`
-4. Pega las claves en `.env.local`
+3. Pega las claves en `.env.local`
 
 ### Google Maps
-5. Obtén una API Key de Google Maps:
+4. Obtén una API Key de Google Maps:
    - Ve a https://console.cloud.google.com/
    - Crea un nuevo proyecto o selecciona uno existente
    - Habilita la API de Maps JavaScript
    - Crea una API Key con restricciones apropiadas
-6. Pega la API Key en `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` en `.env.local`
+5. Pega la API Key en `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` en `.env.local`
+
+- Backend: crea `backend/.env` (o exporta en tu entorno):
+
+```
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=el_vitral_db
+JWT_SECRET=your_jwt_secret_here
+```
+
+Arrancar la aplicación
+
+- Frontend (desarrollo):
+
+```bash
+cd frontend
+npm run dev
+# abre http://localhost:3000
+```
+
+- Backend: actualmente `backend/` contiene las rutas y helpers; no hay servidor HTTP generado automáticamente. Opciones:
+
+1) Montar un servidor Node que importe los handlers en `backend/api/**` y escuche en un puerto (ej. 4000). Entonces:
+
+```bash
+cd backend
+npm run start
+```
