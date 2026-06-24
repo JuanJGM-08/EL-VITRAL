@@ -56,7 +56,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=
-DB_NAME=el_vitral_db
+DB_NAME=database_name
 JWT_SECRET=your_jwt_secret_here
 ```
 
