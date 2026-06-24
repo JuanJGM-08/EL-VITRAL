@@ -856,9 +856,13 @@ const server = http.createServer((req, res) => {
   handleRequest(req, res);
 });
 
-server.listen(port, () => {
-  console.log(`Backend server listening on http://localhost:${port}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(port, () => {
+    console.log(`Servidor corriendo en puerto ${port}`);
+  });
+}
+
+module.exports = server;
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
