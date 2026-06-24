@@ -60,7 +60,12 @@ DB_NAME=el_vitral_db
 JWT_SECRET=your_jwt_secret_here
 ```
 
-Arrancar la aplicación
+## Base de datos
+
+Luego de haber creado las variables de entorno se crea la base de datos, entra a `/backend/database` y abre el archivo de `schema.sql`, copia todo el codigo del archivo y pegalo en la sección de `sql` de `phpMyAdmin` (si desea usar la seeder para tener con los productos puede copiar el codigo del archivo `seeder.sql` el cual se encuentra en la carpeta de database, luego entras en la base de datos en `phpMyAdmin` y entras en `sql` y pegas el codigo del archivo)
+
+
+## Arrancar la aplicación
 
 - Frontend (desarrollo):
 
