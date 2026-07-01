@@ -190,11 +190,11 @@ export default function AdminProductosPage() {
               Nuevo Producto
             </button>
             <Link
-              href="/admin"
-              className="bg-primary hover:bg-secondary text-blue-400 px-4 py-2 rounded-md transition-colors"
-            >
-              Volver
-            </Link>
+            href="/admin"
+            className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            ← Volver al Panel
+          </Link>
           </div>
         </div>
 

@@ -60,8 +60,8 @@ export async function handler(req: NextRequest) {
       credentials: 'include',
     });
 
-    // Forward response
-    const responseBody = await response.text();
+    // Forward response without decoding it as text so PDFs and other binaries stay intact.
+    const responseBody = await response.arrayBuffer();
     const responseHeaders = new Headers(response.headers);
     
     // Allow CORS

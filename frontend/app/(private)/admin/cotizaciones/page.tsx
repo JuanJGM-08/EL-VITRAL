@@ -149,11 +149,11 @@ export default function AdminCotizacionesPage() {
               <p className="text-gray-300 mt-1">Cargando cotizaciones desde la base de datos...</p>
             </div>
             <Link
-              href="/admin"
-              className="bg-primary hover:bg-secondary text-blue-600 px-4 py-2 rounded-md transition-colors"
-            >
-              Volver
-            </Link>
+            href="/admin"
+            className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            ← Volver al Panel
+          </Link>
           </div>
           <div className="flex items-center justify-center py-16">
             <div className="text-white text-xl">Cargando cotizaciones...</div>
@@ -174,8 +174,9 @@ export default function AdminCotizacionesPage() {
 
           <Link
             href="/admin"
-            className="bg-primary hover:bg-secondary text-blue-400 px-4 py-2 rounded-md transition-colors">
-            Volver
+            className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            ← Volver al Panel
           </Link>
         </div>
 

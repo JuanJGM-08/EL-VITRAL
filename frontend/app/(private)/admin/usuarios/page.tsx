@@ -77,9 +77,9 @@ export default function AdminUsuariosPage() {
           <h1 className="text-3xl font-bold text-white">Gestión de Usuarios</h1>
           <Link
             href="/admin"
-            className="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-md transition-colors"
+            className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
           >
-            Volver
+            ← Volver al Panel
           </Link>
         </div>
         

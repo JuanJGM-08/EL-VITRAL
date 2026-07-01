@@ -1600,7 +1600,7 @@ async function handleRequest(req, res) {
       return sendJSON(res, 201, { message: 'Pedido creado', id: result.insertId });
     }
 
-    if (parts[0] === 'api' && parts[1] === 'pedidos' && parts[2] && method === 'GET') {
+    if (parts[0] === 'api' && parts[1] === 'pedidos' && parts[2] && parts[3] !== 'pdf' && method === 'GET') {
       const pedidoId = Number(parts[2]);
       if (Number.isNaN(pedidoId)) {
         return sendJSON(res, 400, { error: 'ID de pedido inválido' });

@@ -45,6 +45,7 @@ export default function MisPedidosPage() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [sendingSurvey, setSendingSurvey] = useState(false);
+  const [showThankYouModal, setShowThankYouModal] = useState(false); // Nuevo estado
 
   useEffect(() => {
     fetch('/api/pedidos', { credentials: 'include' })
@@ -84,8 +85,8 @@ export default function MisPedidosPage() {
     }
   };
 
-  const descargarPdfPedido = (pedidoId: number) => {
-    const url = `/api/pedidos/${pedidoId}/pdf`;
+  const descargarPdfPedido = (id: number) => {
+    const url = `/api/pedidos/${id}/pdf`;
     window.open(url, '_blank');
   };
   
@@ -113,38 +114,37 @@ export default function MisPedidosPage() {
           calificacion: rating,
           comentario: comment,
         }),
-    });
+      });
 
-    const data = await res.json().catch(() => null);
+      const data = await res.json().catch(() => null);
 
-    if (!res.ok) {
-      alert(data?.error || 'No se pudo enviar la encuesta');
-      return;
+      if (!res.ok) {
+        alert(data?.error || 'No se pudo enviar la encuesta');
+        return;
+      }
+
+      setPedidos((prev) =>
+        prev.map((pedido) =>
+          pedido.id === surveyPedido.id
+            ? { ...pedido, encuesta_id: data.id }
+            : pedido
+        )
+      );
+      
+      // Cerrar el modal de encuesta y mostrar el de agradecimiento
+      setShowSurveyModal(false);
+      setSurveyPedido(null);
+      setShowThankYouModal(true); // Mostrar el modal de gracias
+    } catch (error) {
+      console.error('Error al enviar encuesta:', error);
+      alert('Error al enviar la encuesta');
+    } finally {
+      setSendingSurvey(false);
     }
-
-    setPedidos((prev) =>
-      prev.map((pedido) =>
-        pedido.id === surveyPedido.id
-          ? { ...pedido, encuesta_id: data.id }
-          : pedido
-      )
-    );
-    
-    setShowSurveyModal(false);
-    setSurveyPedido(null);
-    alert('Gracias por responder la encuesta');
-  } catch (error) {
-    console.error('Error al enviar encuesta:', error);
-    alert('Error al enviar la encuesta');
-  } finally {
-    setSendingSurvey(false);
-  }
-};
-
+  };
 
   if (loading) {
     return (
-      
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#101828'}}>
         <div className="text-white text-xl">Cargando tus pedidos...</div>
       </div>
@@ -153,15 +153,14 @@ export default function MisPedidosPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#101828' }}>
-      
       <div className="max-w-7xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-white mb-8">Mis Pedidos</h1>
 
         {pedidos.length === 0 ? (
           <div className="rounded-lg shadow-md text-center" style={{ backgroundColor: '#1e2939'}}>
             <div className="rounded-lg p-10 text-center" style={{ backgroundColor: '#1e2939'}}>
-            <p className="text-gray-300 text-lg">No tienes pedidos realizados</p>
-          </div>
+              <p className="text-gray-300 text-lg">No tienes pedidos realizados</p>
+            </div>
           </div>
         ) : (
           <div className="rounded-lg shadow-md overflow-hidden" style={{ backgroundColor: '#1e2939'}}>
@@ -178,7 +177,7 @@ export default function MisPedidosPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {pedidos.map(pedido => (
-                      <tr key={pedido.id} className="hover:bg-gray-800/50">
+                    <tr key={pedido.id} className="hover:bg-gray-800/50">
                       <td className="p-3 text-white font-medium">#{pedido.id}</td>
                       <td className="p-3 text-gray-300">{new Date(pedido.fecha_pedido).toLocaleDateString()}</td>
                       <td className="p-3 text-gray-300">${pedido.total}</td>
@@ -231,6 +230,7 @@ export default function MisPedidosPage() {
         )}
       </div>
 
+      {/* Modal de detalles */}
       {showModal && selectedPedido && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" style={{backgroundColor: '#1e2939'}}>
@@ -289,6 +289,7 @@ export default function MisPedidosPage() {
         </div>
       )}
       
+      {/* Modal de encuesta */}
       {showSurveyModal && surveyPedido && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="rounded-lg shadow-xl max-w-lg w-full mx-4" style={{ backgroundColor: '#1e2939' }}>
@@ -359,11 +360,27 @@ export default function MisPedidosPage() {
                   {sendingSurvey ? 'Enviando...' : 'Enviar encuesta'}
                 </button>
               </div>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
 
+      {/* Nuevo modal de agradecimiento */}
+      {showThankYouModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="rounded-lg shadow-xl max-w-sm w-full mx-4 p-6 text-center" style={{ backgroundColor: '#1e2939' }}>
+            <div className="text-5xl mb-4">😊</div>
+            <h3 className="text-2xl font-bold text-white mb-2">Gracias por tus comentarios</h3>
+            <p className="text-gray-300 mb-6">Tu opinión nos ayuda a mejorar.</p>
+            <button
+              onClick={() => setShowThankYouModal(false)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-md transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
