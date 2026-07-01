@@ -85,18 +85,6 @@ CREATE TABLE inventario (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
-CREATE TABLE mensajes_chat (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_id INT NOT NULL,
-    contenido TEXT NOT NULL,
-    remitente ENUM('usuario', 'admin') DEFAULT 'usuario',
-    leido BOOLEAN DEFAULT false,
-    fecha_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-    INDEX idx_usuario (usuario_id),
-    INDEX idx_fecha (fecha_envio)
-);
-
 CREATE TABLE citas_agenda (
     id INT PRIMARY KEY AUTO_INCREMENT,
     usuario_id INT NOT NULL,
