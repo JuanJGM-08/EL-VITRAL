@@ -17,6 +17,7 @@ export async function middleware(request: NextRequest) {
     '/registro',
     '/olvide-password',
     '/reset-password',
+    '/reset-password/',
     '/consulta-cotizacion'
   ];
 

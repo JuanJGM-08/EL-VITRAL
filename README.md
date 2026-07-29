@@ -58,7 +58,13 @@ DB_USER=root
 DB_PASSWORD=
 DB_NAME=database_name
 JWT_SECRET=your_jwt_secret_here
+FRONTEND_URL=http://localhost:3000
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu_correo@gmail.com
+SMTP_PASS=tu_contraseña_o_app_password
 ```
+
 
 ## Base de datos
 
