@@ -13,7 +13,7 @@ jest.mock('../lib/auth.js', () => ({
 const { query } = require('../lib/db.js');
 const { getUserFromRequest } = require('../lib/auth.js');
 
-// const app = require('../index.js');
+const app = require('../index.js');
 
 describe('Pedidos', () => {
   beforeEach(() => {
@@ -34,29 +34,27 @@ describe('Pedidos', () => {
       .mockResolvedValueOnce({ insertId: 99 })
       .mockResolvedValueOnce({});
 
-    // const res = await request(app)
-    //   .post('/api/pedidos')
-    //   .send({
-    //     cotizacion_id: 20,
-    //     fecha_entrega: '2026-07-01',
-    //   });
+    const res = await request(app)
+      .post('/api/pedidos')
+      .send({
+        cotizacion_id: 20,
+      });
 
-    // expect(res.status).toBe(201);
-    // expect(res.body.message).toBe('Pedido creado');
-    // expect(res.body.id).toBe(99);
+    expect(res.status).toBe(201);
+    expect(res.body.message).toBe('Pedido creado');
+    expect(res.body.id).toBe(99);
   });
 
   test('rechaza pedido sin autenticacion', async () => {
     getUserFromRequest.mockReturnValue(null);
 
-    // const res = await request(app)
-    //   .post('/api/pedidos')
-    //   .send({
-    //     cotizacion_id: 20,
-    //     fecha_entrega: '2026-07-01',
-    //   });
+    const res = await request(app)
+      .post('/api/pedidos')
+      .send({
+        cotizacion_id: 20,
+      });
 
-    // expect(res.status).toBe(401);
+    expect(res.status).toBe(401);
   });
 
   test('rechaza pedido si la cotizacion pertenece a otro usuario', async () => {
@@ -70,13 +68,38 @@ describe('Pedidos', () => {
       },
     ]);
 
-    // const res = await request(app)
-    //   .post('/api/pedidos')
-    //   .send({
-    //     cotizacion_id: 20,
-    //     fecha_entrega: '2026-07-01',
-    //   });
+    const res = await request(app)
+      .post('/api/pedidos')
+      .send({
+        cotizacion_id: 20,
+      });
 
-    // expect(res.status).toBe(403);
+    expect(res.status).toBe(403);
+  });
+
+  // ==========================
+  // NUEVO TEST
+  // ==========================
+  test('rechaza crear pedido cuando la cotizacion no existe', async () => {
+    getUserFromRequest.mockReturnValue({
+      id: 1,
+      rol: 'usuario',
+    });
+
+    query.mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .post('/api/pedidos')
+      .send({
+        cotizacion_id: 9999,
+      });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBeDefined();
+
+    expect(query).toHaveBeenCalledWith(
+      'SELECT * FROM cotizaciones WHERE id = ?',
+      [9999]
+    );
   });
 });
