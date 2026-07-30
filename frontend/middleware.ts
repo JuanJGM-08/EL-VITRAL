@@ -27,7 +27,8 @@ export async function middleware(request: NextRequest) {
         const verified = jwt.verify(token, JWT_SECRET);
         console.log('✅ Verified:', verified);
       } catch (verifyErr) {
-        console.log('⚠️ Error al verificar:', verifyErr.message);
+        const message = verifyErr instanceof Error ? verifyErr.message : String(verifyErr);
+        console.log('⚠️ Error al verificar:', message);
       }
 
       if (!decoded) {
