@@ -10,19 +10,47 @@ jest.mock('../lib/auth.js', () => ({
   sanitizeEmail: jest.fn((email) => String(email ?? '').trim().toLowerCase()),
   sanitizeString: jest.fn((value) => String(value ?? '').trim()),
   generateToken: jest.fn(),
+
   getUserFromRequest: jest.fn(),
+
   isAdmin: jest.fn((user) => user?.rol === 'admin'),
+
+  requireAdmin: jest.fn(() => ({
+    ok: true,
+    user: {
+      id: 1,
+      rol: 'admin',
+    },
+  })),
+
   verifyToken: jest.fn(),
 }));
 
 const { query } = require('../lib/db.js');
-const { getUserFromRequest } = require('../lib/auth.js');
+
+const {
+  getUserFromRequest,
+  requireAdmin,
+} = require('../lib/auth.js');
+
 const app = require('../index.js');
 
 describe('CRUD Productos - /api/admin/productos', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    getUserFromRequest.mockReturnValue({ id: 1, rol: 'admin' });
+
+    getUserFromRequest.mockReturnValue({
+      id: 1,
+      rol: 'admin',
+    });
+
+    requireAdmin.mockReturnValue({
+      ok: true,
+      user: {
+        id: 1,
+        rol: 'admin',
+      },
+    });
   });
 
   test('crea un producto correctamente', async () => {
@@ -71,6 +99,7 @@ describe('CRUD Productos - /api/admin/productos', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Producto eliminado');
+
     expect(query).toHaveBeenCalledWith(
       'DELETE FROM productos WHERE id = ?',
       [10]
@@ -90,4 +119,54 @@ describe('CRUD Productos - /api/admin/productos', () => {
     expect(res.status).toBe(400);
     expect(query).not.toHaveBeenCalled();
   });
+});
+
+// ==========================
+// TEST 37 (NUEVO)
+// ==========================
+test('permite crear un producto sin descripcion', async () => {
+  query.mockResolvedValueOnce({ insertId: 20 });
+
+  const res = await request(app)
+    .post('/api/admin/productos')
+    .send({
+      nombre: 'Espejo Premium',
+      descripcion: '',
+      tipo: 'espejo',
+      unidad_medida: 'unidad',
+      precio_base: 85000,
+      imagen_url: '',
+      stock: 3,
+      activo: true,
+    });
+
+  expect(res.status).toBe(201);
+  expect(res.body.message).toBe('Producto creado');
+  expect(res.body.id).toBe(20);
+
+  expect(query.mock.calls[0][0]).toContain('INSERT INTO productos');
+});
+
+// ==========================
+// TEST 38 (NUEVO)
+// ==========================
+test('crea un segundo producto con datos diferentes', async () => {
+  query.mockResolvedValueOnce({ insertId: 31 });
+
+  const res = await request(app)
+    .post('/api/admin/productos')
+    .send({
+      nombre: 'Puerta de Vidrio',
+      descripcion: 'Puerta templada',
+      tipo: 'puerta',
+      unidad_medida: 'unidad',
+      precio_base: 450000,
+      imagen_url: '',
+      stock: 2,
+      activo: true,
+    });
+
+  expect(res.status).toBe(201);
+  expect(res.body.message).toBe('Producto creado');
+  expect(res.body.id).toBe(31);
 });

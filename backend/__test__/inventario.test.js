@@ -6,22 +6,41 @@ jest.mock('../lib/db.js', () => ({
 
 jest.mock('../lib/auth.js', () => ({
   getUserFromRequest: jest.fn(),
+
   isAdmin: jest.fn((user) => user?.rol === 'admin'),
+
+  requireAdmin: jest.fn(),
+
   sanitizeString: jest.fn((value) => String(value ?? '').trim()),
 }));
 
 const { query } = require('../lib/db.js');
-const { getUserFromRequest } = require('../lib/auth.js');
 
-// const app = require('../index.js');
+const {
+  getUserFromRequest,
+  requireAdmin,
+} = require('../lib/auth.js');
+
+const app = require('../index.js');
 
 describe('Inventario', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    requireAdmin.mockReturnValue({
+      ok: true,
+      user: {
+        id: 1,
+        rol: 'admin',
+      },
+    });
   });
 
   test('lista movimientos de inventario como admin', async () => {
-    getUserFromRequest.mockReturnValue({ id: 1, rol: 'admin' });
+    getUserFromRequest.mockReturnValue({
+      id: 1,
+      rol: 'admin',
+    });
 
     query.mockResolvedValueOnce([
       {
@@ -40,7 +59,10 @@ describe('Inventario', () => {
   });
 
   test('registra entrada de inventario y actualiza stock', async () => {
-    getUserFromRequest.mockReturnValue({ id: 1, rol: 'admin' });
+    getUserFromRequest.mockReturnValue({
+      id: 1,
+      rol: 'admin',
+    });
 
     query
       .mockResolvedValueOnce({})
@@ -57,13 +79,16 @@ describe('Inventario', () => {
     // expect(res.status).toBe(201);
     // expect(res.body.message).toBe('Movimiento registrado');
     // expect(query).toHaveBeenCalledWith(
-    //   'UPDATE productos SET stock = stock + ? WHERE id = ?',
+    //   'UPDATE productos SET stock = stock +? WHERE id = ?',
     //   [5, 10]
     // );
   });
 
   test('rechaza cantidad invalida', async () => {
-    getUserFromRequest.mockReturnValue({ id: 1, rol: 'admin' });
+    getUserFromRequest.mockReturnValue({
+      id: 1,
+      rol: 'admin',
+    });
 
     // const res = await request(app)
     //   .post('/api/admin/inventario')
@@ -73,5 +98,29 @@ describe('Inventario', () => {
     //   });
 
     // expect(res.status).toBe(400);
+  });
+
+  // ==========================
+  // NUEVO TEST
+  // ==========================
+
+  test('rechaza acceso cuando requireAdmin falla', async () => {
+    requireAdmin.mockReturnValue({
+      ok: false,
+      status: 403,
+      error: 'No autorizado',
+    });
+
+    const res = await request(app)
+      .post('/api/admin/inventario')
+      .send({
+        producto_id: 5,
+        cantidad: 2,
+      });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBeDefined();
+
+    expect(query).not.toHaveBeenCalled();
   });
 });
