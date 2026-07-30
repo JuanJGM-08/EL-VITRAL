@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const http = require('http');
 const { URL } = require('url');
 const express = require('express');
@@ -24,6 +26,7 @@ const {
   requireAdmin,
   verifyToken,
 } = require('./lib/auth.js');
+const { createPasswordResetToken, sendPasswordResetEmail } = require('./lib/email.js');
 
 const port = process.env.PORT || 4000;
 const isProduction = process.env.NODE_ENV === 'production';
@@ -872,6 +875,18 @@ function generateUniqueCode() {
   return `${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
 
+async function ensurePasswordResetColumns() {
+  const tokenColumn = await query("SHOW COLUMNS FROM usuarios LIKE 'reset_token'");
+  if (!Array.isArray(tokenColumn) || tokenColumn.length === 0) {
+    await query('ALTER TABLE usuarios ADD COLUMN reset_token VARCHAR(255) NULL');
+  }
+
+  const expiresColumn = await query("SHOW COLUMNS FROM usuarios LIKE 'reset_expires_at'");
+  if (!Array.isArray(expiresColumn) || expiresColumn.length === 0) {
+    await query('ALTER TABLE usuarios ADD COLUMN reset_expires_at DATETIME NULL');
+  }
+}
+
 function calculatePrice(product, item) {
   const cantidad = Number(item.cantidad) || 0;
   const medida_largo = Number(item.medida_largo) || 0;
@@ -1063,6 +1078,85 @@ async function handleRequest(req, res) {
           rol: user.rol
         }
       });
+    }
+
+    // ===== FORGOT PASSWORD =====
+    if (pathname === '/api/auth/forgot-password' && method === 'POST') {
+      const body = await parseBody(req);
+      const email = sanitizeEmail(body.email);
+
+      if (!email) {
+        return sendJSON(res, 400, { error: 'El correo es obligatorio' });
+      }
+
+      await ensurePasswordResetColumns();
+
+      const rows = await query('SELECT id, nombre, email FROM usuarios WHERE email = ?', [email]);
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return sendJSON(res, 200, {
+          message: 'Si la cuenta existe, recibirás un correo con instrucciones para recuperar tu contraseña.',
+        });
+      }
+
+      const user = rows[0];
+      const token = createPasswordResetToken();
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+      await query(
+        'UPDATE usuarios SET reset_token = ?, reset_expires_at = ? WHERE id = ?',
+        [token, expiresAt, user.id]
+      );
+
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          token,
+          frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+        });
+      } catch (emailError) {
+        console.error('Error sending password reset email:', emailError);
+        return sendJSON(res, 500, {
+          error: 'No se pudo enviar el correo. Revisa SMTP_USER, SMTP_PASS y el servidor de correo.',
+        });
+      }
+
+      return sendJSON(res, 200, {
+        message: 'Si la cuenta existe, recibirás un correo con instrucciones para recuperar tu contraseña.',
+      });
+    }
+
+    // ===== RESET PASSWORD =====
+    if (pathname === '/api/auth/reset-password' && method === 'POST') {
+      const body = await parseBody(req);
+      const token = sanitizeString(body.token || '');
+      const password = sanitizeString(body.password || '');
+
+      if (!token || !password) {
+        return sendJSON(res, 400, { error: 'El token y la nueva contraseña son obligatorios' });
+      }
+
+      if (password.length < 6) {
+        return sendJSON(res, 400, { error: 'La contraseña debe tener al menos 6 caracteres' });
+      }
+
+      await ensurePasswordResetColumns();
+
+      const rows = await query(
+        'SELECT id FROM usuarios WHERE reset_token = ? AND reset_expires_at > NOW() LIMIT 1',
+        [token]
+      );
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return sendJSON(res, 400, { error: 'El enlace de recuperación es inválido o ha expirado' });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      await query(
+        'UPDATE usuarios SET password = ?, reset_token = NULL, reset_expires_at = NULL WHERE id = ?',
+        [hashedPassword, rows[0].id]
+      );
+
+      return sendJSON(res, 200, { message: 'Contraseña actualizada correctamente' });
     }
 
     // ===== LOGOUT =====
