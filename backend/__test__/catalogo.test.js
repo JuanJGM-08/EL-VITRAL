@@ -39,3 +39,33 @@ describe('Catalogo', () => {
     expect(res.body).toEqual([]);
   });
 });
+// ==========================
+// NUEVO TEST
+// ==========================
+test('todos los productos devueltos pertenecen al catalogo activo', async () => {
+  query.mockResolvedValueOnce([
+    {
+      id: 1,
+      nombre: 'Vidrio templado',
+      tipo: 'vidrio',
+      precio_base: '120000',
+      activo: 1,
+    },
+    {
+      id: 2,
+      nombre: 'Espejo biselado',
+      tipo: 'espejo',
+      precio_base: '80000',
+      activo: 1,
+    },
+  ]);
+
+  const res = await request(app).get('/api/productos');
+
+  expect(res.status).toBe(200);
+  expect(res.body).toHaveLength(2);
+
+  res.body.forEach((producto) => {
+    expect(producto.activo).toBe(1);
+  });
+});

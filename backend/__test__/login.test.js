@@ -16,7 +16,12 @@ jest.mock('../lib/auth.js', () => ({
 }));
 
 const { query } = require('../lib/db.js');
-const { comparePassword, generateToken } = require('../lib/auth.js');
+const {
+  comparePassword,
+  generateToken,
+  sanitizeEmail,
+} = require('../lib/auth.js');
+
 const app = require('../index.js');
 
 describe('Login - POST /api/auth/login', () => {
@@ -48,12 +53,14 @@ describe('Login - POST /api/auth/login', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBeDefined();
+
     expect(generateToken).toHaveBeenCalledWith({
       id: 1,
       rol: 'usuario',
       nombre: 'Juan Perez',
       email: 'juan@test.com',
     });
+
     expect(res.headers['set-cookie']).toBeDefined();
   });
 
@@ -95,5 +102,24 @@ describe('Login - POST /api/auth/login', () => {
 
     expect(res.status).toBe(401);
     expect(comparePassword).not.toHaveBeenCalled();
+  });
+  
+  test('rechaza login cuando email y password estan vacios', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: '',
+        password: '',
+      });
+
+    expect(sanitizeEmail).toHaveBeenCalledWith('');
+
+    expect(res.status).toBe(400);
+
+    expect(query).not.toHaveBeenCalled();
+
+    expect(comparePassword).not.toHaveBeenCalled();
+
+    expect(generateToken).not.toHaveBeenCalled();
   });
 });

@@ -16,7 +16,7 @@ jest.mock('../lib/auth.js', () => ({
 }));
 
 const { query } = require('../lib/db.js');
-const { hashPassword } = require('../lib/auth.js');
+const { hashPassword, sanitizeEmail, sanitizeString } = require('../lib/auth.js');
 const app = require('../index.js');
 
 describe('Registro - POST /api/auth/register', () => {
@@ -71,5 +71,50 @@ describe('Registro - POST /api/auth/register', () => {
 
     expect(res.status).toBe(409);
     expect(res.body.error).toBeDefined();
+  });
+
+  test('rechaza registro cuando el correo contiene espacios y ya existe después de sanitizarse', async () => {
+    query.mockResolvedValueOnce([{ id: 5 }]);
+
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        nombre: 'Maria Lopez',
+        email: '   MARIA@test.com   ',
+        password: '123456',
+        telefono: '3001234567',
+        direccion: 'Calle 1',
+      });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBeDefined();
+
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(hashPassword).not.toHaveBeenCalled();
+  });
+
+  // ==========================
+  // TEST 35 (NUEVO)
+  // ==========================
+  test('sanitiza correctamente nombre y correo antes del registro', async () => {
+    query
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({ insertId: 15 });
+
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        nombre: '   Maria Lopez   ',
+        email: '   MARIA@TEST.COM   ',
+        password: '123456',
+        telefono: '3001234567',
+        direccion: 'Calle 1',
+      });
+
+    expect(res.status).toBe(201);
+
+    expect(sanitizeString).toHaveBeenCalledWith('   Maria Lopez   ');
+    expect(sanitizeEmail).toHaveBeenCalledWith('   MARIA@TEST.COM   ');
+    expect(hashPassword).toHaveBeenCalledWith('123456');
   });
 });
