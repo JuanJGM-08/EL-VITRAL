@@ -5,6 +5,10 @@ const { URL } = require('url');
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./swagger');
+const { OAuth2Client } = require('google-auth-library');
+const crypto = require('crypto');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
 const { query } = require('./lib/db.js');
 const {
@@ -1078,6 +1082,67 @@ async function handleRequest(req, res) {
           rol: user.rol
         }
       });
+    }
+
+    // ===== GOOGLE LOGIN / REGISTER =====
+    if (pathname === '/api/auth/google' && method === 'POST') {
+      const body = await parseBody(req);
+      const credential = body.credential;
+
+      if (!credential) {
+        return sendJSON(res, 400, { error: 'Token de Google requerido' });
+      }
+
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        const email = sanitizeEmail(payload.email);
+        const name = sanitizeString(payload.name);
+
+        let userRows = await query('SELECT * FROM usuarios WHERE email = ?', [email]);
+        let user;
+
+        if (!Array.isArray(userRows) || userRows.length === 0) {
+          // Register
+          const randomPassword = crypto.randomBytes(16).toString('hex');
+          const hashedPassword = await hashPassword(randomPassword);
+          await query(
+            'INSERT INTO usuarios (nombre, email, password, telefono, direccion, rol, aprobado) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [name, email, hashedPassword, null, null, 'usuario', true]
+          );
+          userRows = await query('SELECT * FROM usuarios WHERE email = ?', [email]);
+        }
+        
+        user = userRows[0];
+
+        if (!user.activo) {
+          return sendJSON(res, 403, { error: 'Cuenta inactiva' });
+        }
+        if (!user.aprobado) {
+          return sendJSON(res, 403, { error: 'Cuenta en espera de aprobación' });
+        }
+
+        const token = generateToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
+        const cookie = createCookie(token);
+        res.setHeader('Set-Cookie', cookie);
+
+        return sendJSON(res, 200, { 
+          message: 'Inicio de sesion exitoso con Google',
+          token: token,
+          user: {
+            id: user.id,
+            nombre: user.nombre,
+            email: user.email,
+            rol: user.rol
+          }
+        });
+      } catch (error) {
+        console.error('Error verifying Google Token:', error);
+        return sendJSON(res, 401, { error: 'Token de Google inválido' });
+      }
     }
 
     // ===== FORGOT PASSWORD =====

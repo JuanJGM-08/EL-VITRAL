@@ -2,7 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
 
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 export default function RegistroPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -22,6 +24,33 @@ export default function RegistroPage() {
   });
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    setErrors(prev => ({ ...prev, general: '' }));
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccess('Inicio exitoso con Google. Redirigiendo...');
+        setTimeout(() => window.location.href = '/', 1200);
+      } else {
+        setErrors(prev => ({ ...prev, general: data.error || 'Error al autenticar' }));
+      }
+    } catch {
+      setErrors(prev => ({ ...prev, general: 'Error de conexión.' }));
+    } finally {
+      setLoading(false);
+    }
+  };
   const [touched, setTouched] = useState({
     nombre: false,
     email: false,
@@ -206,7 +235,7 @@ export default function RegistroPage() {
           </p>
         </div>
 
-        
+
       </div>
 
       <div className="relative mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -383,6 +412,29 @@ export default function RegistroPage() {
                   Inicia sesión aquí
                 </Link>
               </p>
+            </div>
+
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <div className="relative w-full flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                </div>
+                <div className="relative bg-white/80 dark:bg-gray-800 px-4 text-sm text-gray-500">
+                  O continúa con
+                </div>
+              </div>
+
+              {googleClientId ? (
+                <GoogleOAuthProvider clientId={googleClientId}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setErrors(prev => ({ ...prev, general: 'Error al autenticar con Google' }))}
+                    useOneTap
+                  />
+                </GoogleOAuthProvider>
+              ) : (
+                <div className="text-xs text-yellow-600">Configura NEXT_PUBLIC_GOOGLE_CLIENT_ID para activar Google Auth</div>
+              )}
             </div>
           </form>
         </div>

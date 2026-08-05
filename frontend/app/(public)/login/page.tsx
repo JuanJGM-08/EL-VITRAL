@@ -3,8 +3,10 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
 
 const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '';
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +16,35 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccess('Inicio exitoso con Google');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1200);
+      } else {
+        setError(data.error || 'Error al iniciar sesión con Google');
+      }
+    } catch {
+      setError('Error de conexión. Verifica tu conexión a internet.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Validaciones en cliente
   const [emailError, setEmailError] = useState('');
@@ -271,7 +302,29 @@ export default function LoginPage() {
                   Regístrate aquí
                 </Link>
               </p>
+            </div>
 
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <div className="relative w-full flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                </div>
+                <div className="relative bg-white/80 dark:bg-gray-800 px-4 text-sm text-gray-500">
+                  O continúa con
+                </div>
+              </div>
+
+              {googleClientId ? (
+                <GoogleOAuthProvider clientId={googleClientId}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError('Error al autenticar con Google')}
+                    useOneTap
+                  />
+                </GoogleOAuthProvider>
+              ) : (
+                <div className="text-xs text-yellow-600">Configura NEXT_PUBLIC_GOOGLE_CLIENT_ID para activar Google Auth</div>
+              )}
             </div>
           </form>
         </div>
