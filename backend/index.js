@@ -31,6 +31,7 @@ const {
   verifyToken,
 } = require('./lib/auth.js');
 const { createPasswordResetToken, sendPasswordResetEmail } = require('./lib/email.js');
+const { notifyOrderCreated, notifyOrderStateChange, notifyAppointment, notifyStockMovement } = require('./lib/notifications.js');
 
 const port = process.env.PORT || 4000;
 const isProduction = process.env.NODE_ENV === 'production';
@@ -1070,9 +1071,9 @@ async function handleRequest(req, res) {
       const token = generateToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
       const cookie = createCookie(token);
       res.setHeader('Set-Cookie', cookie);
-      
+
       // 🔥 DEVOLVER EL TOKEN PARA BEARER AUTH
-      return sendJSON(res, 200, { 
+      return sendJSON(res, 200, {
         message: 'Inicio de sesion exitoso',
         token: token,
         user: {
@@ -1115,7 +1116,7 @@ async function handleRequest(req, res) {
           );
           userRows = await query('SELECT * FROM usuarios WHERE email = ?', [email]);
         }
-        
+
         user = userRows[0];
 
         if (!user.activo) {
@@ -1129,7 +1130,7 @@ async function handleRequest(req, res) {
         const cookie = createCookie(token);
         res.setHeader('Set-Cookie', cookie);
 
-        return sendJSON(res, 200, { 
+        return sendJSON(res, 200, {
           message: 'Inicio de sesion exitoso con Google',
           token: token,
           user: {
@@ -1487,6 +1488,15 @@ async function handleRequest(req, res) {
 
       params.push(id);
       await query(`UPDATE pedidos SET ${fields.join(', ')} WHERE id = ?`, params);
+
+      if (nuevoEstado && nuevoEstado !== pedidoActual.estado) {
+        const uRows = await query('SELECT u.email, c.email_cliente FROM pedidos p LEFT JOIN usuarios u ON u.id = p.usuario_id LEFT JOIN cotizaciones c ON c.id = p.cotizacion_id WHERE p.id = ?', [id]);
+        if (Array.isArray(uRows) && uRows.length > 0) {
+          const emailToSend = uRows[0].email_cliente || uRows[0].email;
+          notifyOrderStateChange(emailToSend, id, nuevoEstado);
+        }
+      }
+
       return sendJSON(res, 200, { message: 'Pedido actualizado' });
     }
 
@@ -1541,6 +1551,13 @@ async function handleRequest(req, res) {
 
       await query('INSERT INTO inventario (producto_id, cantidad, tipo_movimiento, descripcion, usuario_id) VALUES (?, ?, ?, ?, ?)', [producto_id, cantidad, tipo_movimiento, descripcion || null, userData.id]);
       await query('UPDATE productos SET stock = stock + ? WHERE id = ?', [cantidad, producto_id]);
+
+      const prodRows = await query('SELECT nombre, stock FROM productos WHERE id = ?', [producto_id]);
+      const admins = await query("SELECT email FROM usuarios WHERE rol = 'admin' AND activo = 1");
+      if (Array.isArray(prodRows) && prodRows.length > 0 && Array.isArray(admins) && admins.length > 0) {
+        notifyStockMovement(admins.map(a => a.email), prodRows[0].nombre, cantidad, tipo_movimiento, prodRows[0].stock);
+      }
+
       return sendJSON(res, 201, { message: 'Movimiento registrado' });
     }
 
@@ -1756,6 +1773,16 @@ async function handleRequest(req, res) {
         [cotizacion_id, ownerId, null, 'pendiente', 'pendiente', cotizacion.total]
       );
       await query('UPDATE cotizaciones SET estado = ? WHERE id = ?', ['convertida', cotizacion_id]);
+
+      if (cotizacion.email_cliente) {
+        notifyOrderCreated(cotizacion.email_cliente, result.insertId);
+      } else {
+        const ownerRows = await query('SELECT email FROM usuarios WHERE id = ?', [ownerId]);
+        if (Array.isArray(ownerRows) && ownerRows.length > 0 && ownerRows[0].email) {
+          notifyOrderCreated(ownerRows[0].email, result.insertId);
+        }
+      }
+
       return sendJSON(res, 201, { message: 'Pedido creado', id: result.insertId });
     }
 
@@ -1816,7 +1843,7 @@ async function handleRequest(req, res) {
       );
       return sendPDF(res, `pedido-${pedidoId}.pdf`, (doc) => buildPedidoPdf(doc, pedido, Array.isArray(detalles) ? detalles.map(formatNumericRow) : []));
     }
-    
+
     if (pathname === '/api/encuestas' && method === 'POST') {
       const userData = getUserFromRequest(req);
       if (!userData) {
@@ -1874,7 +1901,7 @@ async function handleRequest(req, res) {
         id: result.insertId,
       });
     }
-    
+
     if (parts[0] === 'api' && parts[1] === 'encuestas' && parts[2] === 'pedidos' && parts[3] && method === 'GET') {
       const userData = getUserFromRequest(req);
       if (!userData) {
@@ -1994,6 +2021,10 @@ async function handleRequest(req, res) {
         [userData.id, titulo, descripcion || null, fecha_cita, tipo, 'pendiente', notas || null]
       );
 
+      if (userData.email) {
+        notifyAppointment(userData.email, titulo, fecha_cita, false);
+      }
+
       return sendJSON(res, 201, { id: result.insertId, mensaje: 'Cita creada exitosamente' });
     }
 
@@ -2029,6 +2060,11 @@ async function handleRequest(req, res) {
         'UPDATE citas_agenda SET titulo = ?, descripcion = ?, fecha_cita = ?, tipo = ?, estado = ?, notas = ? WHERE id = ?',
         [titulo, descripcion || null, fecha_cita, tipo, estado, notas || null, citaId]
       );
+
+      const uRows = await query('SELECT email FROM usuarios WHERE id = ?', [rows[0].usuario_id]);
+      if (Array.isArray(uRows) && uRows.length > 0 && uRows[0].email) {
+        notifyAppointment(uRows[0].email, titulo, fecha_cita, true);
+      }
 
       return sendJSON(res, 200, { mensaje: 'Cita actualizada exitosamente' });
     }
