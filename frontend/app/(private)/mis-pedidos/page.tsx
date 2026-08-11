@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 
 interface PedidoDetalle {
   id: number;
@@ -23,6 +24,7 @@ interface Pedido {
   fecha_entrega?: string;
   total: number;
   estado: string;
+  pago?: string;
   detalles?: PedidoDetalle[];
   encuesta_id?: number | null;
 }
@@ -46,6 +48,7 @@ export default function MisPedidosPage() {
   const [comment, setComment] = useState('');
   const [sendingSurvey, setSendingSurvey] = useState(false);
   const [showThankYouModal, setShowThankYouModal] = useState(false); // Nuevo estado
+  const [payModalPedido, setPayModalPedido] = useState<Pedido | null>(null);
 
   useEffect(() => {
     fetch('/api/pedidos', { credentials: 'include' })
@@ -89,7 +92,7 @@ export default function MisPedidosPage() {
     const url = `/api/pedidos/${id}/pdf`;
     window.open(url, '_blank');
   };
-  
+
   const abrirEncuesta = (pedido: Pedido) => {
     setSurveyPedido(pedido);
     setRating(5);
@@ -130,7 +133,7 @@ export default function MisPedidosPage() {
             : pedido
         )
       );
-      
+
       // Cerrar el modal de encuesta y mostrar el de agradecimiento
       setShowSurveyModal(false);
       setSurveyPedido(null);
@@ -143,9 +146,52 @@ export default function MisPedidosPage() {
     }
   };
 
+  const handleWompiPayment = (pedido: Pedido, tipo: 'anticipo' | 'pagado') => {
+    const total = Number(pedido.total);
+    if (!total || total <= 0) return;
+
+    const amountInCents = tipo === 'anticipo' ? Math.round((total / 2) * 100) : Math.round(total * 100);
+    const reference = `pedido_${pedido.id}_${Date.now()}`;
+
+    // @ts-ignore
+    const checkout = new window.WidgetCheckout({
+      currency: 'COP',
+      amountInCents: amountInCents,
+      reference: reference,
+      publicKey: 'pub_test_X0zDA9xoKdePzhd8a0x9HAez7HgGO2fH' // Clave Pública Sandbox Pruebas
+    });
+
+    checkout.open(async function (result: any) {
+      const transaction = result.transaction;
+      if (transaction && transaction.status === 'APPROVED') {
+        try {
+          const res = await fetch(`/api/pedidos/${pedido.id}/pago-completado`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ wompi_transaction_id: transaction.id, tipo_pago: tipo })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert('¡Pago registrado correctamente!');
+            window.location.reload();
+          } else {
+            alert(`Error al registrar pago en servidor: ${data.error}`);
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Error de conexión post-pago, contacta al administrador.');
+        }
+      } else {
+        alert('El pago no fue aprobado o fue cancelado.');
+      }
+      setPayModalPedido(null);
+    });
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#101828'}}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#101828' }}>
         <div className="text-white text-xl">Cargando tus pedidos...</div>
       </div>
     );
@@ -157,13 +203,13 @@ export default function MisPedidosPage() {
         <h1 className="text-3xl font-bold text-white mb-8">Mis Pedidos</h1>
 
         {pedidos.length === 0 ? (
-          <div className="rounded-lg shadow-md text-center" style={{ backgroundColor: '#1e2939'}}>
-            <div className="rounded-lg p-10 text-center" style={{ backgroundColor: '#1e2939'}}>
+          <div className="rounded-lg shadow-md text-center" style={{ backgroundColor: '#1e2939' }}>
+            <div className="rounded-lg p-10 text-center" style={{ backgroundColor: '#1e2939' }}>
               <p className="text-gray-300 text-lg">No tienes pedidos realizados</p>
             </div>
           </div>
         ) : (
-          <div className="rounded-lg shadow-md overflow-hidden" style={{ backgroundColor: '#1e2939'}}>
+          <div className="rounded-lg shadow-md overflow-hidden" style={{ backgroundColor: '#1e2939' }}>
             <div className='overflow-x-auto'>
               <table className="w-full">
                 <thead className="bg-gray-800">
@@ -171,7 +217,8 @@ export default function MisPedidosPage() {
                     <th className="p-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID</th>
                     <th className="p-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Fecha</th>
                     <th className="p-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Total</th>
-                    <th className="p-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Estado</th>
+                    <th className="p-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Estado Gral.</th>
+                    <th className="p-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Estado Pago</th>
                     <th className="p-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Acciones</th>
                   </tr>
                 </thead>
@@ -183,10 +230,18 @@ export default function MisPedidosPage() {
                       <td className="p-3 text-gray-300">${pedido.total}</td>
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                          ${pedido.estado === 'entregado' ? 'bg-green-900/50 text-green-300' : 
-                            pedido.estado === 'en_proceso' ? 'bg-blue-900/50 text-blue-300' : 
-                            'bg-yellow-900/50 text-yellow-300'}`}>
+                          ${pedido.estado === 'entregado' ? 'bg-green-900/50 text-green-300' :
+                            pedido.estado === 'en_proceso' ? 'bg-blue-900/50 text-blue-300' :
+                              'bg-yellow-900/50 text-yellow-300'}`}>
                           {pedido.estado}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold
+                          ${pedido.pago === 'pagado' ? 'bg-emerald-900/50 text-emerald-300' :
+                            pedido.pago === 'anticipo' ? 'bg-blue-900/50 text-blue-300' :
+                              'bg-gray-700 text-gray-300'}`}>
+                          {pedido.pago}
                         </span>
                       </td>
                       <td className="p-3">
@@ -204,6 +259,15 @@ export default function MisPedidosPage() {
                           >
                             Ver detalles
                           </button>
+
+                          {(pedido.pago === 'pendiente' || !pedido.pago) && (
+                            <button
+                              onClick={() => setPayModalPedido(pedido)}
+                              className="text-emerald-400 hover:text-emerald-300 font-bold"
+                            >
+                              Realizar Pago
+                            </button>
+                          )}
 
                           {pedido.estado === 'entregado' && !pedido.encuesta_id && (
                             <button
@@ -233,7 +297,7 @@ export default function MisPedidosPage() {
       {/* Modal de detalles */}
       {showModal && selectedPedido && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" style={{backgroundColor: '#1e2939'}}>
+          <div className="rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#1e2939' }}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-white">Detalle de pedido #{selectedPedido.id}</h2>
@@ -288,7 +352,7 @@ export default function MisPedidosPage() {
           </div>
         </div>
       )}
-      
+
       {/* Modal de encuesta */}
       {showSurveyModal && surveyPedido && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
@@ -309,7 +373,7 @@ export default function MisPedidosPage() {
               <p className="text-gray-300 mb-6">
                 Cuéntanos cómo fue tu experiencia con el pedido #{surveyPedido.id}.
               </p>
-              
+
               <label className="block text-sm text-gray-400 mb-2">
                 Calificacion
               </label>
@@ -320,11 +384,10 @@ export default function MisPedidosPage() {
                     key={value}
                     type="button"
                     onClick={() => setRating(value)}
-                    className={`h-11 w-11 rounded-md font-bold transition-colors ${
-                      rating >= value
-                        ? 'bg-yellow-500 text-gray-900'
-                        : 'bg-gray-800 text-gray-300 border border-gray-600'
-                    }`}
+                    className={`h-11 w-11 rounded-md font-bold transition-colors ${rating >= value
+                      ? 'bg-yellow-500 text-gray-900'
+                      : 'bg-gray-800 text-gray-300 border border-gray-600'
+                      }`}
                   >
                     {value}
                   </button>
@@ -381,6 +444,39 @@ export default function MisPedidosPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Pago Wompi */}
+      {payModalPedido && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="rounded-lg shadow-xl max-w-sm w-full mx-4 p-6" style={{ backgroundColor: '#1e2939' }}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-2xl font-bold text-white mb-2">Pagar Pedido #{payModalPedido.id}</h3>
+              <button onClick={() => setPayModalPedido(null)} className="text-gray-400 hover:text-gray-200 text-2xl">×</button>
+            </div>
+
+            <p className="text-gray-300 mb-6 text-sm">
+              Puedes realizar el pago completo del pedido o únicamente de la mitad a modo de anticipo. Selecciona qué modalidad prefieres pagar:
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => handleWompiPayment(payModalPedido, 'anticipo')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md transition-colors font-semibold"
+              >
+                Pagar Anticipo (50%) - ${formatNumber(Number(payModalPedido.total) / 2)}
+              </button>
+              <button
+                onClick={() => handleWompiPayment(payModalPedido, 'pagado')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-md transition-colors font-semibold"
+              >
+                Pagar Total (100%) - ${formatNumber(Number(payModalPedido.total))}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Script src="https://checkout.wompi.co/widget.js" strategy="afterInteractive" />
     </div>
   );
 }

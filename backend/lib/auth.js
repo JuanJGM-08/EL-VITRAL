@@ -24,13 +24,27 @@ function sanitizeEmail(value) {
   return email;
 }
 
-function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key';
+
+function generateAccessToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
 }
 
-function verifyToken(token) {
+function generateRefreshToken(payload) {
+  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+}
+
+function verifyAccessToken(token) {
   try {
     return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
+
+function verifyRefreshToken(token) {
+  try {
+    return jwt.verify(token, JWT_REFRESH_SECRET);
   } catch {
     return null;
   }
@@ -54,12 +68,12 @@ function parseCookies(cookieHeader) {
 function extractBearerToken(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return null;
-  
+
   const parts = authHeader.split(' ');
   if (parts.length !== 2 || parts[0] !== 'Bearer') {
     return null;
   }
-  
+
   return parts[1];
 }
 
@@ -67,17 +81,17 @@ function getUserFromRequest(req) {
   // 1. Intentar con Bearer Token (HEADER)
   const tokenFromBearer = extractBearerToken(req);
   if (tokenFromBearer) {
-    const decoded = verifyToken(tokenFromBearer);
+    const decoded = verifyAccessToken(tokenFromBearer);
     if (decoded) return decoded;
   }
-  
+
   const cookies = parseCookies(req.headers.cookie || '');
-  const tokenFromCookie = cookies.token;
+  const tokenFromCookie = cookies.accessToken || cookies.token;
   if (tokenFromCookie) {
-    const decoded = verifyToken(tokenFromCookie);
+    const decoded = verifyAccessToken(tokenFromCookie);
     if (decoded) return decoded;
   }
-  
+
   return null;
 }
 
@@ -109,11 +123,13 @@ module.exports = {
   comparePassword,
   sanitizeString,
   sanitizeEmail,
-  generateToken,
-  verifyToken,
+  generateAccessToken,
+  generateRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
   getUserFromRequest,
   isAdmin,
   requireAdmin,
   parseCookies,
-  extractBearerToken, 
+  extractBearerToken,
 };

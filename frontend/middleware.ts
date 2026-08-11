@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/admin')) {
-    const token = request.cookies.get('token')?.value;
+    const token = request.cookies.get('accessToken')?.value || request.cookies.get('token')?.value;
     console.log('🔑 Token:', token);
 
     if (!token) {

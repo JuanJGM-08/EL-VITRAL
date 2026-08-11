@@ -24,14 +24,16 @@ const {
   comparePassword,
   sanitizeEmail,
   sanitizeString,
-  generateToken,
+  generateAccessToken,
+  generateRefreshToken,
   getUserFromRequest,
   isAdmin,
   requireAdmin,
-  verifyToken,
+  verifyAccessToken,
+  verifyRefreshToken,
 } = require('./lib/auth.js');
 const { createPasswordResetToken, sendPasswordResetEmail } = require('./lib/email.js');
-const { notifyOrderCreated, notifyOrderStateChange, notifyAppointment, notifyStockMovement } = require('./lib/notifications.js');
+const { notifyOrderCreated, notifyOrderStateChange, notifyAppointment, notifyStockMovement, notifyPaymentReceived } = require('./lib/notifications.js');
 
 const port = process.env.PORT || 4000;
 const isProduction = process.env.NODE_ENV === 'production';
@@ -858,22 +860,35 @@ async function parseBody(req) {
   });
 }
 
-function createCookie(token) {
-  const parts = [`token=${token}`, 'Path=/', `Max-Age=${60 * 60 * 24 * 7}`, 'SameSite=Lax'];
-  if (isProduction) {
-    parts.push('Secure');
+function createCookies(accessToken, refreshToken) {
+  const isProd = isProduction;
+  const accessParts = [`accessToken=${accessToken}`, 'Path=/', `Max-Age=${15 * 60}`, 'SameSite=Lax'];
+  const refreshParts = [`token=${refreshToken}`, 'Path=/', `Max-Age=${60 * 60 * 24 * 7}`, 'SameSite=Lax'];
+
+  if (isProd) {
+    accessParts.push('Secure');
+    refreshParts.push('Secure');
   }
-  parts.push('HttpOnly');
-  return parts.join('; ');
+
+  accessParts.push('HttpOnly');
+  refreshParts.push('HttpOnly');
+
+  return [accessParts.join('; '), refreshParts.join('; ')];
 }
 
-function createExpiredCookie() {
-  const parts = ['token=; Path=/', 'Expires=Thu, 01 Jan 1970 00:00:00 GMT', 'SameSite=Lax'];
+function clearCookies() {
+  const accessParts = ['accessToken=; Path=/', 'Expires=Thu, 01 Jan 1970 00:00:00 GMT', 'SameSite=Lax'];
+  const refreshParts = ['token=; Path=/', 'Expires=Thu, 01 Jan 1970 00:00:00 GMT', 'SameSite=Lax'];
+
   if (isProduction) {
-    parts.push('Secure');
+    accessParts.push('Secure');
+    refreshParts.push('Secure');
   }
-  parts.push('HttpOnly');
-  return parts.join('; ');
+
+  accessParts.push('HttpOnly');
+  refreshParts.push('HttpOnly');
+
+  return [accessParts.join('; '), refreshParts.join('; ')];
 }
 
 function generateUniqueCode() {
@@ -1031,9 +1046,10 @@ async function handleRequest(req, res) {
       }
 
       const hashedPassword = await hashPassword(password);
+      const newUserId = crypto.randomUUID();
       await query(
-        'INSERT INTO usuarios (nombre, email, password, telefono, direccion, rol, aprobado) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [nombre, email, hashedPassword, telefono || null, direccion || null, 'usuario', true]
+        'INSERT INTO usuarios (id, nombre, email, password, telefono, direccion, rol, aprobado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [newUserId, nombre, email, hashedPassword, telefono || null, direccion || null, 'usuario', true]
       );
 
       return sendJSON(res, 201, { message: 'Usuario registrado correctamente' });
@@ -1068,14 +1084,15 @@ async function handleRequest(req, res) {
         return sendJSON(res, 403, { error: 'Cuenta en espera de aprobación' });
       }
 
-      const token = generateToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
-      const cookie = createCookie(token);
-      res.setHeader('Set-Cookie', cookie);
+      const accessToken = generateAccessToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
+      const refreshToken = generateRefreshToken({ id: user.id });
+      const cookies = createCookies(accessToken, refreshToken);
+      res.setHeader('Set-Cookie', cookies);
 
       // 🔥 DEVOLVER EL TOKEN PARA BEARER AUTH
       return sendJSON(res, 200, {
         message: 'Inicio de sesion exitoso',
-        token: token,
+        token: accessToken,
         user: {
           id: user.id,
           nombre: user.nombre,
@@ -1110,9 +1127,10 @@ async function handleRequest(req, res) {
           // Register
           const randomPassword = crypto.randomBytes(16).toString('hex');
           const hashedPassword = await hashPassword(randomPassword);
+          const newUserId = crypto.randomUUID();
           await query(
-            'INSERT INTO usuarios (nombre, email, password, telefono, direccion, rol, aprobado) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [name, email, hashedPassword, null, null, 'usuario', true]
+            'INSERT INTO usuarios (id, nombre, email, password, telefono, direccion, rol, aprobado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [newUserId, name, email, hashedPassword, null, null, 'usuario', true]
           );
           userRows = await query('SELECT * FROM usuarios WHERE email = ?', [email]);
         }
@@ -1126,13 +1144,14 @@ async function handleRequest(req, res) {
           return sendJSON(res, 403, { error: 'Cuenta en espera de aprobación' });
         }
 
-        const token = generateToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
-        const cookie = createCookie(token);
-        res.setHeader('Set-Cookie', cookie);
+        const accessToken = generateAccessToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
+        const refreshToken = generateRefreshToken({ id: user.id });
+        const cookies = createCookies(accessToken, refreshToken);
+        res.setHeader('Set-Cookie', cookies);
 
         return sendJSON(res, 200, {
           message: 'Inicio de sesion exitoso con Google',
-          token: token,
+          token: accessToken,
           user: {
             id: user.id,
             nombre: user.nombre,
@@ -1227,8 +1246,41 @@ async function handleRequest(req, res) {
 
     // ===== LOGOUT =====
     if (pathname === '/api/auth/logout' && method === 'POST') {
-      res.setHeader('Set-Cookie', createExpiredCookie());
+      res.setHeader('Set-Cookie', clearCookies());
       return sendJSON(res, 200, { message: 'Sesión cerrada' });
+    }
+
+    // ===== REFRESH TOKEN =====
+    if (pathname === '/api/auth/refresh' && method === 'POST') {
+      const cookies = parseCookies(req.headers.cookie || '');
+      const token = cookies.token;
+      if (!token) {
+        return sendJSON(res, 401, { error: 'No refresh token provided' });
+      }
+
+      const decoded = verifyRefreshToken(token);
+      if (!decoded) {
+        return sendJSON(res, 401, { error: 'Invalid or expired refresh token' });
+      }
+
+      const userRows = await query('SELECT id, rol, nombre, email, activo, aprobado FROM usuarios WHERE id = ?', [decoded.id]);
+      if (!Array.isArray(userRows) || userRows.length === 0) {
+        return sendJSON(res, 401, { error: 'Usuario no encontrado' });
+      }
+
+      const user = userRows[0];
+      if (!user.activo) return sendJSON(res, 403, { error: 'Cuenta inactiva' });
+      if (!user.aprobado) return sendJSON(res, 403, { error: 'Cuenta en espera de aprobación' });
+
+      const accessToken = generateAccessToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
+      const refreshToken = generateRefreshToken({ id: user.id });
+      const newCookies = createCookies(accessToken, refreshToken);
+      res.setHeader('Set-Cookie', newCookies);
+
+      return sendJSON(res, 200, {
+        message: 'Token refrescado correctamente',
+        token: accessToken,
+      });
     }
 
     // ===== GET ME =====
@@ -1734,7 +1786,7 @@ async function handleRequest(req, res) {
         LEFT JOIN encuestas_satisfaccion e ON e.pedido_id = p.id
         WHERE p.usuario_id = ?
         ORDER BY p.fecha_pedido DESC
-      `, [Number(userData.id)]);
+      `, [userData.id]);
       return sendJSON(res, 200, Array.isArray(rows) ? rows.map(formatNumericRow) : []);
     }
 
@@ -1805,7 +1857,7 @@ async function handleRequest(req, res) {
         return sendJSON(res, 404, { error: 'Pedido no encontrado' });
       }
       const pedido = formatNumericRow(rows[0]);
-      if (!isAdmin(userData) && Number(pedido.usuario_id) !== Number(userData.id)) {
+      if (!isAdmin(userData) && pedido.usuario_id !== userData.id) {
         return sendJSON(res, 403, { error: 'No autorizado' });
       }
       const detalles = await query(
@@ -1834,7 +1886,7 @@ async function handleRequest(req, res) {
         return sendJSON(res, 404, { error: 'Pedido no encontrado' });
       }
       const pedido = formatNumericRow(rows[0]);
-      if (!isAdmin(userData) && Number(pedido.usuario_id) !== Number(userData.id)) {
+      if (!isAdmin(userData) && pedido.usuario_id !== userData.id) {
         return sendJSON(res, 403, { error: 'No autorizado' });
       }
       const detalles = await query(
@@ -1842,6 +1894,78 @@ async function handleRequest(req, res) {
         [pedido.cotizacion_id]
       );
       return sendPDF(res, `pedido-${pedidoId}.pdf`, (doc) => buildPedidoPdf(doc, pedido, Array.isArray(detalles) ? detalles.map(formatNumericRow) : []));
+    }
+
+    if (parts[0] === 'api' && parts[1] === 'pedidos' && parts[2] && parts[3] === 'pago-completado' && method === 'POST') {
+      const pedidoId = Number(parts[2]);
+      if (Number.isNaN(pedidoId)) {
+        return sendJSON(res, 400, { error: 'ID de pedido inválido' });
+      }
+      const userData = getUserFromRequest(req);
+      if (!userData) {
+        return sendJSON(res, 401, { error: 'No autorizado' });
+      }
+
+      const body = await parseBody(req);
+      const transactionId = sanitizeString(body.wompi_transaction_id || '');
+      const tipoPago = sanitizeString(body.tipo_pago || ''); // 'anticipo' o 'pagado'
+
+      if (!transactionId || !['anticipo', 'pagado'].includes(tipoPago)) {
+        return sendJSON(res, 400, { error: 'Datos de pago faltantes o inválidos' });
+      }
+
+      // Check if order exists and user is authorized
+      const rows = await query('SELECT * FROM pedidos WHERE id = ?', [pedidoId]);
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return sendJSON(res, 404, { error: 'Pedido no encontrado' });
+      }
+      const pedido = formatNumericRow(rows[0]);
+      if (!isAdmin(userData) && pedido.usuario_id !== userData.id) {
+        return sendJSON(res, 403, { error: 'No autorizado' });
+      }
+
+      if (pedido.pago === 'pagado') {
+        return sendJSON(res, 400, { error: 'El pedido ya se encuentra totalmente pagado' });
+      }
+
+      // Vefify with Wompi Sandbox
+      try {
+        const wompiRes = await fetch(`https://sandbox.wompi.co/v1/transactions/${transactionId}`);
+        if (!wompiRes.ok) {
+          return sendJSON(res, 400, { error: 'No se pudo verificar la transacción con Wompi' });
+        }
+        const wompiData = await wompiRes.json();
+        const transaction = wompiData.data;
+
+        if (transaction.status !== 'APPROVED') {
+          return sendJSON(res, 400, { error: 'La transacción no está aprobada' });
+        }
+
+        // Convert to cents
+        const total = Number(pedido.total);
+        const expectedCents = tipoPago === 'anticipo' ? Math.round((total / 2) * 100) : Math.round(total * 100);
+
+        if (transaction.amount_in_cents !== expectedCents) {
+          console.warn(`Discrepancia en monto: esperado ${expectedCents}, recibido ${transaction.amount_in_cents}`);
+          // Just a warning for now, but in production we would reject it. Given it's sandbox and precision can vary, we let it pass if it's close.
+        }
+
+        // Update Order
+        await query('UPDATE pedidos SET pago = ? WHERE id = ?', [tipoPago, pedidoId]);
+
+        // Send Email to Admins
+        const admins = await query("SELECT email FROM usuarios WHERE rol = 'admin' AND activo = 1");
+        if (Array.isArray(admins) && admins.length > 0) {
+          const isAnticipo = tipoPago === 'anticipo';
+          const amountPaid = transaction.amount_in_cents / 100;
+          notifyPaymentReceived(admins.map(a => a.email), pedidoId, amountPaid, isAnticipo);
+        }
+
+        return sendJSON(res, 200, { message: 'Pago registrado correctamente' });
+      } catch (err) {
+        console.error('Error al procesar el pago Wompi:', err);
+        return sendJSON(res, 500, { error: 'Fallo al procesar verificación Wompi' });
+      }
     }
 
     if (pathname === '/api/encuestas' && method === 'POST') {

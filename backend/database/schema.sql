@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS el_vitral_db;
 USE el_vitral_db;
 
 CREATE TABLE usuarios (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id VARCHAR(36) PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE productos (
 
 CREATE TABLE cotizaciones (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_id INT NULL,
+    usuario_id VARCHAR(36) NULL,
     nombre_cliente VARCHAR(100) NOT NULL,
     email_cliente VARCHAR(100) NOT NULL,
     telefono_cliente VARCHAR(20),
@@ -60,7 +60,7 @@ CREATE TABLE cotizacion_detalles (
 CREATE TABLE pedidos (
     id INT PRIMARY KEY AUTO_INCREMENT,
     cotizacion_id INT NULL,
-    usuario_id INT NOT NULL,
+    usuario_id VARCHAR(36) NOT NULL,
     fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_entrega DATE,
     estado ENUM('pendiente', 'en_proceso', 'listo', 'entregado') DEFAULT 'pendiente',
@@ -74,7 +74,7 @@ CREATE TABLE pedidos (
 CREATE TABLE encuestas_satisfaccion (
     id INT PRIMARY KEY AUTO_INCREMENT,
     pedido_id INT NOT NULL,
-    usuario_id INT NOT NULL,
+    usuario_id VARCHAR(36) NOT NULL,
     calificacion TINYINT NOT NULL,
     comentario TEXT,
     fecha_respuesta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -91,7 +91,7 @@ CREATE TABLE inventario (
     tipo_movimiento ENUM('entrada', 'salida') NOT NULL,
     descripcion TEXT,
     pedido_id INT NULL,
-    usuario_id INT NOT NULL,
+    usuario_id VARCHAR(36) NOT NULL,
     fecha_movimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (producto_id) REFERENCES productos(id),
     FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
@@ -100,7 +100,7 @@ CREATE TABLE inventario (
 
 CREATE TABLE citas_agenda (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_id INT NOT NULL,
+    usuario_id VARCHAR(36) NOT NULL,
     titulo VARCHAR(255) NOT NULL,
     descripcion TEXT,
     fecha_cita DATETIME NOT NULL,
