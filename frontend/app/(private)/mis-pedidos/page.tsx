@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import Script from 'next/script';
 
 interface PedidoDetalle {
@@ -41,7 +40,6 @@ export default function MisPedidosPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
   const [surveyPedido, setSurveyPedido] = useState<Pedido | null>(null);
   const [rating, setRating] = useState(5);
@@ -49,6 +47,7 @@ export default function MisPedidosPage() {
   const [sendingSurvey, setSendingSurvey] = useState(false);
   const [showThankYouModal, setShowThankYouModal] = useState(false); // Nuevo estado
   const [payModalPedido, setPayModalPedido] = useState<Pedido | null>(null);
+  const [mobileActionPedido, setMobileActionPedido] = useState<Pedido | null>(null);
 
   useEffect(() => {
     fetch('/api/pedidos', { credentials: 'include' })
@@ -69,7 +68,6 @@ export default function MisPedidosPage() {
   }, []);
 
   const verDetallesPedido = async (pedidoId: number) => {
-    setLoadingDetails(true);
     try {
       const res = await fetch(`/api/pedidos/${pedidoId}`, { credentials: 'include' });
       if (!res.ok) {
@@ -83,8 +81,6 @@ export default function MisPedidosPage() {
     } catch (error) {
       console.error('Error al cargar detalle del pedido:', error);
       alert('Error al cargar el detalle del pedido');
-    } finally {
-      setLoadingDetails(false);
     }
   };
 
@@ -153,15 +149,34 @@ export default function MisPedidosPage() {
     const amountInCents = tipo === 'anticipo' ? Math.round((total / 2) * 100) : Math.round(total * 100);
     const reference = `pedido_${pedido.id}_${Date.now()}`;
 
-    // @ts-ignore
-    const checkout = new window.WidgetCheckout({
+    interface WompiWidgetResult {
+      transaction: {
+        id: string;
+        status: string;
+      };
+    }
+
+    interface WompiWidget {
+      open: (callback: (result: WompiWidgetResult) => void) => void;
+    }
+
+    interface WompiWidgetConfig {
+      currency: string;
+      amountInCents: number;
+      reference: string;
+      publicKey: string;
+    }
+
+    const checkout = new (window as unknown as {
+      WidgetCheckout: new (config: WompiWidgetConfig) => WompiWidget;
+    }).WidgetCheckout({
       currency: 'COP',
       amountInCents: amountInCents,
       reference: reference,
       publicKey: 'pub_test_X0zDA9xoKdePzhd8a0x9HAez7HgGO2fH' // Clave Pública Sandbox Pruebas
     });
 
-    checkout.open(async function (result: any) {
+    checkout.open(async function (result: WompiWidgetResult) {
       const transaction = result.transaction;
       if (transaction && transaction.status === 'APPROVED') {
         try {
@@ -245,7 +260,7 @@ export default function MisPedidosPage() {
                         </span>
                       </td>
                       <td className="p-3">
-                        <div className="flex flex-wrap gap-3">
+                        <div className="hidden md:flex flex-wrap gap-3">
                           <button
                             onClick={() => descargarPdfPedido(pedido.id)}
                             className="text-cyan-400 hover:text-cyan-300"
@@ -283,6 +298,15 @@ export default function MisPedidosPage() {
                               Encuesta enviada
                             </span>
                           )}
+                        </div>
+                        <div className="md:hidden">
+                          <button
+                            onClick={() => setMobileActionPedido(pedido)}
+                            className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-lg bg-gray-700 hover:bg-gray-600 px-4 py-2 text-white transition-colors border border-gray-600"
+                          >
+                            <span className="material-symbols-outlined text-sm">settings</span>
+                            Acciones
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -471,6 +495,78 @@ export default function MisPedidosPage() {
               >
                 Pagar Total (100%) - ${formatNumber(Number(payModalPedido.total))}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de acciones para móvil */}
+      {mobileActionPedido && (
+        <div className="fixed inset-0 bg-black/80 flex items-end justify-center z-50 md:hidden p-4">
+          <div className="rounded-2xl shadow-xl w-full mx-auto" style={{ backgroundColor: '#1e2939' }}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Acciones de Pedido</h2>
+                  <p className="text-gray-400 text-sm">Pedido #{mobileActionPedido.id}</p>
+                </div>
+                <button
+                  onClick={() => setMobileActionPedido(null)}
+                  className="text-gray-400 hover:text-gray-200 text-3xl min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <button
+                  onClick={() => {
+                    descargarPdfPedido(mobileActionPedido.id);
+                    setMobileActionPedido(null);
+                  }}
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 text-cyan-400 bg-cyan-900/30 hover:bg-cyan-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-cyan-800/50"
+                >
+                  <span className="material-symbols-outlined">picture_as_pdf</span>
+                  Descargar PDF
+                </button>
+
+                <button
+                  onClick={() => {
+                    verDetallesPedido(mobileActionPedido.id);
+                    setMobileActionPedido(null);
+                  }}
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 text-blue-400 bg-blue-900/30 hover:bg-blue-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-blue-800/50"
+                >
+                  <span className="material-symbols-outlined">visibility</span>
+                  Ver detalles
+                </button>
+
+                {(mobileActionPedido.pago === 'pendiente' || !mobileActionPedido.pago) && (
+                  <button
+                    onClick={() => {
+                      setPayModalPedido(mobileActionPedido);
+                      setMobileActionPedido(null);
+                    }}
+                    className="w-full min-h-[48px] flex items-center justify-center gap-2 text-emerald-400 bg-emerald-900/30 hover:bg-emerald-900/50 rounded-xl px-4 text-base font-bold transition-colors border border-emerald-800/50"
+                  >
+                    <span className="material-symbols-outlined">payment</span>
+                    Realizar Pago
+                  </button>
+                )}
+
+                {mobileActionPedido.estado === 'entregado' && !mobileActionPedido.encuesta_id && (
+                  <button
+                    onClick={() => {
+                      abrirEncuesta(mobileActionPedido);
+                      setMobileActionPedido(null);
+                    }}
+                    className="w-full min-h-[48px] flex items-center justify-center gap-2 text-emerald-400 bg-emerald-900/30 hover:bg-emerald-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-emerald-800/50"
+                  >
+                    <span className="material-symbols-outlined">rate_review</span>
+                    Responder encuesta
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

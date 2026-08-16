@@ -33,12 +33,8 @@ export default function CotizacionesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [loadingDetails, setLoadingDetails] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-
-  useEffect(() => {
-    fetchCotizaciones();
-  }, []);
+  const [mobileActionCotizacion, setMobileActionCotizacion] = useState<Cotizacion | null>(null);
 
   const fetchCotizaciones = async () => {
     try {
@@ -54,12 +50,18 @@ export default function CotizacionesPage() {
     }
   };
 
-  const convertirAPedido = async (cotizacionId: number) => {
+  useEffect(() => {
+    setTimeout(() => fetchCotizaciones(), 0);
+  }, []);
+
+  const convertirAPedido = async (id?: number) => {
+    if (id) {
+      // cotización seleccionada
+    }
     setShowPhoneModal(true);
   };
 
   const verDetalles = async (codigo: string) => {
-    setLoadingDetails(true);
     try {
       const res = await fetch(`/api/cotizaciones/${encodeURIComponent(codigo)}`);
       if (!res.ok) {
@@ -72,8 +74,6 @@ export default function CotizacionesPage() {
     } catch (error) {
       console.error('Error cargando detalles:', error);
       alert('Error al cargar detalles');
-    } finally {
-      setLoadingDetails(false);
     }
   };
 
@@ -156,27 +156,38 @@ export default function CotizacionesPage() {
                           {cotizacion.estado}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
-                        {cotizacion.estado !== 'convertida' && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="hidden md:block space-x-3">
+                          {cotizacion.estado !== 'convertida' && (
+                            <button
+                              onClick={() => convertirAPedido(cotizacion.id)}
+                              className="text-primary hover:text-secondary"
+                            >
+                              Llama para confirmar
+                            </button>
+                          )}
                           <button
-                            onClick={() => convertirAPedido(cotizacion.id)}
-                            className="text-primary hover:text-secondary"
+                            onClick={() => descargarPdfCotizacion(cotizacion.codigo_unico)}
+                            className="text-cyan-400 hover:text-cyan-300"
                           >
-                            Llama para confirmar
+                            Descargar PDF
                           </button>
-                        )}
-                        <button
-                          onClick={() => descargarPdfCotizacion(cotizacion.codigo_unico)}
-                          className="text-cyan-400 hover:text-cyan-300"
-                        >
-                          Descargar PDF
-                        </button>
-                        <button
-                          onClick={() => verDetalles(cotizacion.codigo_unico)}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          Ver Detalles
-                        </button>
+                          <button
+                            onClick={() => verDetalles(cotizacion.codigo_unico)}
+                            className="text-blue-400 hover:text-blue-300"
+                          >
+                            Ver Detalles
+                          </button>
+                        </div>
+                        <div className="md:hidden">
+                          <button
+                            onClick={() => setMobileActionCotizacion(cotizacion)}
+                            className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-lg bg-gray-700 hover:bg-gray-600 px-4 py-2 text-white transition-colors border border-gray-600"
+                          >
+                            <span className="material-symbols-outlined text-sm">settings</span>
+                            Acciones
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -217,7 +228,7 @@ export default function CotizacionesPage() {
                     </tr>
                   </thead>
                   <tbody className='divide-y divide-gray-700'>
-                    {selectedCotizacion.detalles?.map((det: any, i: number) => (
+                    {selectedCotizacion.detalles?.map((det, i: number) => (
                       <tr key={i} className="border-b">
                         <td className="p-2">{det.descripcion}</td>
                         <td className="p-2">{det.medida_largo && det.medida_ancho ? `${det.medida_largo}x${det.medida_ancho} cm` : 'No aplica'}</td>
@@ -276,6 +287,64 @@ export default function CotizacionesPage() {
                 >
                   Cerrar
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de acciones para móvil */}
+      {mobileActionCotizacion && (
+        <div className="fixed inset-0 bg-black/80 flex items-end justify-center z-50 md:hidden p-4">
+          <div className="rounded-2xl shadow-xl w-full mx-auto" style={{ backgroundColor: '#1e2939' }}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Acciones</h2>
+                  <p className="text-gray-400 text-sm">Cotización {mobileActionCotizacion.codigo_unico}</p>
+                </div>
+                <button
+                  onClick={() => setMobileActionCotizacion(null)}
+                  className="text-gray-400 hover:text-gray-200 text-3xl min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <button
+                  onClick={() => {
+                    verDetalles(mobileActionCotizacion.codigo_unico);
+                    setMobileActionCotizacion(null);
+                  }}
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 text-blue-400 bg-blue-900/30 hover:bg-blue-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-blue-800/50"
+                >
+                  <span className="material-symbols-outlined">visibility</span>
+                  Ver Detalles
+                </button>
+
+                <button
+                  onClick={() => {
+                    descargarPdfCotizacion(mobileActionCotizacion.codigo_unico);
+                    setMobileActionCotizacion(null);
+                  }}
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 text-cyan-400 bg-cyan-900/30 hover:bg-cyan-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-cyan-800/50"
+                >
+                  <span className="material-symbols-outlined">picture_as_pdf</span>
+                  Descargar PDF
+                </button>
+
+                {mobileActionCotizacion.estado !== 'convertida' && (
+                  <button
+                    onClick={() => {
+                      convertirAPedido(mobileActionCotizacion.id);
+                      setMobileActionCotizacion(null);
+                    }}
+                    className="w-full min-h-[48px] flex items-center justify-center gap-2 text-primary bg-sky-900/30 hover:bg-sky-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-sky-800/50"
+                  >
+                    <span className="material-symbols-outlined">phone_in_talk</span>
+                    Llama para confirmar
+                  </button>
+                )}
               </div>
             </div>
           </div>

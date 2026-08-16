@@ -1,6 +1,5 @@
 'use client';
-import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
@@ -9,13 +8,22 @@ const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '';
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth <= 360);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setError('');
@@ -154,7 +162,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 pointer-events-none"></div>
 
       <div className="relative sm:mx-auto sm:w-full sm:max-w-md">
@@ -255,9 +263,11 @@ export default function LoginPage() {
                 Verificación de seguridad
               </div>
               {siteKey ? (
-                <div className="flex justify-center bg-white rounded-xl p-4 border border-gray-200">
+                <div className="flex justify-center items-center bg-white rounded-xl p-3 border border-gray-200 overflow-x-auto w-full">
                   <ReCAPTCHA
+                    key={isSmallScreen ? 'compact' : 'normal'}
                     sitekey={siteKey}
+                    size={isSmallScreen ? 'compact' : 'normal'}
                     onChange={(token) => setRecaptchaToken(token)}
                   />
                 </div>

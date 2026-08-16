@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from 'next/image';
 import Link from "next/link";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface Producto {
     id: number;
@@ -31,9 +31,12 @@ const tipoIcono = {
 
 export default function CatalogoContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const [productos, setProductos] = useState<Producto[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filtro, setFiltro] = useState('todos');
+
+    const tipo = searchParams.get('tipo');
+    const filtro = tipo === 'templado' || tipo === 'laminado' ? 'vidrio' : (tipo || 'todos');
 
     useEffect(() => {
         fetch('/api/productos')
@@ -44,18 +47,18 @@ export default function CatalogoContent() {
             });
     }, []);
 
-    useEffect(() => {
-        const tipo = searchParams.get('tipo');
-        const aplicacion = searchParams.get('aplicacion');
-        const servicio = searchParams.get('servicio');
-
-        if (tipo) {
-            const tipoMapeado = tipo === 'templado' || tipo === 'laminado' ? 'vidrio' : tipo;
-            setFiltro(tipoMapeado);
-        } else if (aplicacion || servicio) {
-            setFiltro('todos');
+    const setFiltro = (nuevoFiltro: string) => {
+        const params = new URLSearchParams(window.location.search);
+        if (nuevoFiltro === 'todos') {
+            params.delete('tipo');
+        } else {
+            params.set('tipo', nuevoFiltro);
         }
-    }, [searchParams]);
+        // Remove app-related queries if switching filters
+        params.delete('aplicacion');
+        params.delete('servicio');
+        router.push(`/catalogo?${params.toString()}`);
+    };
 
     const productosFiltrados = productos.filter(producto => {
         if (filtro === 'todos') return true;

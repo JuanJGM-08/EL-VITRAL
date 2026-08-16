@@ -34,10 +34,6 @@ export default function AdminProductosPage() {
     activo: true,
   });
 
-  useEffect(() => {
-    fetchProductos();
-  }, []);
-
   const fetchProductos = async () => {
     try {
       const res = await fetch('/api/admin/productos', { credentials: 'include' });
@@ -65,6 +61,13 @@ export default function AdminProductosPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProductos();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const openEditor = (producto: Producto) => {
     setCurrentProduct(producto);
@@ -220,6 +223,7 @@ export default function AdminProductosPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           {producto.imagen_url && (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img src={producto.imagen_url} alt={producto.nombre} className="w-10 h-10 rounded object-cover" />
                           )}
                           <div>
@@ -231,12 +235,23 @@ export default function AdminProductosPage() {
                       <td className="px-6 py-4 text-gray-300">{producto.descripcion}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-white font-medium">{producto.stock}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => openEditor(producto)}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          Editar
-                        </button>
+                        <div className="hidden md:block">
+                          <button
+                            onClick={() => openEditor(producto)}
+                            className="text-blue-400 hover:text-blue-300 font-medium py-2"
+                          >
+                            Editar
+                          </button>
+                        </div>
+                        <div className="md:hidden">
+                          <button
+                            onClick={() => openEditor(producto)}
+                            className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-lg bg-gray-700 hover:bg-gray-600 px-4 py-2 text-white transition-colors border border-gray-600"
+                          >
+                            <span className="material-symbols-outlined text-sm">edit</span>
+                            Editar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -248,18 +263,18 @@ export default function AdminProductosPage() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="max-w-4xl w-full rounded-3xl overflow-hidden shadow-2xl bg-slate-950">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="max-w-4xl w-full rounded-3xl overflow-hidden shadow-2xl bg-slate-950 flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] my-auto">
+            <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-800 shrink-0">
               <div>
-                <h2 className="text-2xl font-semibold text-white">{currentProduct ? 'Detalle de producto' : 'Nuevo producto'}</h2>
-                <p className="text-sm text-slate-400">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white">{currentProduct ? 'Detalle de producto' : 'Nuevo producto'}</h2>
+                <p className="text-xs sm:text-sm text-slate-400">
                   {currentProduct ? 'Edita la información del producto y gestiona su estado.' : 'Completa los datos para crear un nuevo producto.'}
                 </p>
               </div>
-              <button onClick={closeModal} className="text-slate-400 hover:text-white text-2xl">×</button>
+              <button onClick={closeModal} className="text-slate-400 hover:text-white text-2xl p-1">×</button>
             </div>
-            <div className="px-6 py-6 grid gap-4 sm:grid-cols-2">
+            <div className="px-5 sm:px-6 py-5 sm:py-6 grid gap-4 sm:grid-cols-2 flex-1 overflow-y-auto min-h-0">
               <div>
                 <label className="block text-sm font-medium text-slate-300">Nombre</label>
                 <input
@@ -342,7 +357,7 @@ export default function AdminProductosPage() {
                 <label htmlFor="activo" className="text-sm text-slate-300">Producto activo</label>
               </div>
             </div>
-            <div className="flex flex-col gap-3 border-t border-slate-800 px-6 py-5 sm:flex-row sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-slate-800 px-5 sm:px-6 py-4 sm:py-5 sm:flex-row sm:justify-between shrink-0 bg-slate-950">
               <button
                 onClick={deleteProduct}
                 className="w-full rounded-2xl bg-red-600 px-5 py-3 text-white hover:bg-red-500 transition-colors sm:w-auto"

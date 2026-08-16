@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
 
     try {
       // Decodificar sin verificar (para ver el contenido)
-      const decoded: any = jwt.decode(token);
+      const decoded = jwt.decode(token) as jwt.JwtPayload | null;
       console.log('📦 Decoded (sin verificar):', decoded);
 
       // También intentar verificar con el secreto
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
         console.log('⚠️ Error al verificar:', message);
       }
 
-      if (!decoded) {
+      if (!decoded || typeof decoded === 'string') {
         console.log('❌ No se pudo decodificar, redirigiendo a login');
         return NextResponse.redirect(new URL('/login', request.url));
       }

@@ -1,0 +1,928 @@
+
+--- PAGE 1 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+SERVICIO NACIONAL DE APRENDIZAJE – SENA
+TECNOLOGÍA EN ANÁLISIS Y DESARROLLO DE SOFTWARE – ADSO
+DISEÑO UX/UI Y
+SISTEMA DE DISEÑO
+Plantilla institucional para investigar, diseñar, validar y documentar la experiencia e interfaz
+del producto
+Campo Información
+Nombre del proyecto El Vitral
+Centro de formación
+Regional
+Ficha
+Programa Tecnología en Análisis y Desarrollo de Software – ADSO
+Equipo responsable
+Responsable UX/UI
+Product Owner / cliente
+Instructor(es)
+Versión 1.0
+Fecha
+Naturaleza del documento
+Este documento integra la investigación de usuarios, arquitectura de información, flujos, wireframes, mockups,
+prototipos y sistema de diseño. Figma u otra herramienta editable conserva los artefactos visuales; este documento
+registra decisiones, trazabilidad, validaciones, reglas y evidencias. No debe convertirse en un álbum de capturas.
+Documento complementario a Alcance y Requisitos, Backlog e Historias de Usuario, Matriz de Trazabilidad, Arquitectura y Plan de
+Pruebas.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 2 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Control documental
+Elemento Detalle
+Código documental ADSO-UXUI-01
+Nombre Diseño UX/UI y Sistema de Diseño
+Clasificación Documento de diseño, validación y especificación visual
+Estado Borrador / En revisión / Aprobado / Obsoleto
+Propietario Responsable UX/UI o equipo de diseño
+Revisor funcional Cliente, Product Owner o usuario representante
+Revisor técnico Líder frontend o arquitecto
+Revisor académico Instructor responsable
+Ubicación oficial Repositorio /docs/diseno y herramienta de prototipado
+Periodicidad de revisión En cada iteración con cambios de interfaz o flujo
+Historial de versiones
+Versión Fecha Descripción Responsable Aprobado por
+0.1 Investigación y
+estructura inicial
+0.5 Wireframes y flujos
+validados
+1.0 Diseño aprobado para
+implementación
+Registro de aprobaciones
+Rol Nombre Decisión Fecha Observaciones
+Responsable funcional Aprobado / Devuelto
+Usuario representante Aprobado / Devuelto
+Líder frontend Aprobado / Devuelto
+Instructor Aprobado / Devuelto
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 3 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Tabla de Contenido
+Control documental 2
+Historial de versiones 2
+Registro de aprobaciones 2
+1. Propósito, alcance y principios 6
+1.1 Objetivos específicos 6
+1.2 Principios de diseño 6
+2. Relación con otros artefactos 6
+3. Investigación y comprensión de usuarios 8
+3.1 Fuentes de información 8
+3.2 Perfil o persona 8
+3.3 Mapa de necesidades 8
+4. Arquitectura de información 10
+4.1 Inventario de contenidos y funciones 10
+4.2 Estructura de navegación 10
+4.3 Mapa del sitio 10
+4.4 Criterios de calidad 10
+5. Flujos de usuario y navegación 11
+5.1 Catálogo de flujos 11
+5.2 Ficha de flujo 11
+5.3 Reglas de navegación 11
+6. Inventario y especificación de pantallas 12
+6.1 Inventario maestro 12
+6.2 Ficha de pantalla 12
+6.3 Matriz pantalla–rol–acción 13
+7. Wireframes 14
+7.1 Registro de wireframes 14
+7.2 Contenido mínimo por wireframe 14
+7.3 Criterios de aprobación 14
+8. Mockups y prototipos 14
+8.1 Registro de mockups 14
+8.2 Registro de prototipos 15
+8.3 Reglas de versionamiento 15
+9. Estados y comportamiento de interfaz 16
+9.1 Estados obligatorios 16
+9.2 Matriz de estados por pantalla 16
+9.3 Mensajes y prevención de errores 16
+10. Diseño responsive y compatibilidad 17
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 4 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+10.1 Dispositivos y breakpoints 17
+10.2 Matriz de comportamiento responsive 17
+10.3 Compatibilidad 17
+11. Accesibilidad 18
+11.1 Lista mínima de verificación 18
+11.2 Registro de hallazgos 18
+12. Sistema de diseño 20
+12.1 Principios y alcance 20
+12.2 Design tokens 20
+12.3 Paleta de colores 20
+12.4 Tipografía 20
+12.5 Espaciado, grid y breakpoints 21
+13. Componentes y patrones 22
+13.1 Catálogo de componentes 22
+13.2 Ficha de componente 22
+13.3 Patrones funcionales 23
+14. UX writing y contenido 24
+14.1 Voz y tono 24
+14.2 Catálogo de mensajes 24
+14.3 Reglas de contenido 24
+15. Pruebas de usabilidad y validación 24
+15.1 Plan de prueba 24
+15.2 Guion de tareas 25
+15.3 Registro de resultados 25
+15.4 Hallazgos y decisiones 25
+16. Entrega a desarrollo y control de cambios 26
+16.1 Paquete de handoff 26
+16.2 Registro de decisiones de diseño 26
+16.3 Solicitud de cambio de diseño 26
+16.4 Criterios de correspondencia con implementación 26
+17. Trazabilidad, indicadores y aprobación 27
+17.1 Matriz resumida 27
+17.2 Indicadores sugeridos 27
+17.3 Lista de verificación final 27
+17.4 Aprobación del documento 28
+Anexo A. Convenciones de identificación 29
+Anexo B. Estructura recomendada en el repositorio 29
+Anexo C. Evidencias mínimas por nivel de madurez 29
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 5 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Anexo D. Errores frecuentes que deben evitarse 30
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 6 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+1. Propósito, alcance y principios
+El documento define cómo se comprenderán las necesidades de los usuarios, cómo se estructurará la
+información, cómo se diseñarán y validarán los flujos y qué reglas visuales deberán respetarse durante la
+implementación. Su finalidad es reducir ambigüedad, prevenir retrabajo y asegurar una experiencia usable,
+accesible y coherente.
+1.1 Objetivos específicos
+● Identificar perfiles, necesidades, limitaciones y contextos de uso.
+● Diseñar arquitectura de información y navegación comprensibles.
+● Representar y validar flujos antes de implementar.
+● Documentar pantallas, estados, reglas y permisos.
+● Establecer un sistema de diseño reutilizable y accesible.
+● Probar la interfaz con usuarios o representantes.
+● Mantener trazabilidad entre requisitos, historias, diseño, código y pruebas.
+1.2 Principios de diseño
+Principio Aplicación
+Centrado en las personas Las decisiones se justifican con necesidades y contexto, no solo
+con preferencias del equipo.
+Consistencia Patrones iguales se comportan y se ven de manera equivalente.
+Claridad La interfaz comunica estado, acción posible y resultado esperado.
+Accesibilidad Los flujos principales pueden operarse con teclado y tecnologías
+de asistencia básicas.
+Prevención de errores Se reducen errores mediante restricciones, confirmaciones y
+mensajes útiles.
+Diseño verificable Cada decisión importante tiene criterio de aceptación o evidencia
+de validación.
+Simplicidad responsable Se evita complejidad visual o técnica que no aporte valor.
+Regla de coherencia
+No se diseña una pantalla sin historia, requisito, caso de uso o necesidad trazable. Tampoco se implementa una
+interfaz que contradiga el prototipo aprobado sin registrar y validar el cambio.
+2. Relación con otros artefactos
+Artefacto Aporta Recibe de UX/UI
+Formulación y alcance Problema, usuarios, límites y objetivos. Evidencia de solución propuesta y
+restricciones de uso.
+Requisitos Funciones, reglas, RNF y permisos. Pantallas, flujos y criterios de usabilidad.
+Backlog e historias Valor, actores y criterios de aceptación. Prototipos y escenarios visuales
+relacionados.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 7 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Artefacto Aporta Recibe de UX/UI
+Arquitectura Restricciones técnicas, integraciones y Necesidades de frontend, estados y
+seguridad. contratos de interacción.
+Matriz de trazabilidad Códigos y cobertura. UI, flujo, versión, validación y evidencia.
+Plan de pruebas Criterios y riesgos. Casos de usabilidad, accesibilidad y
+compatibilidad.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 8 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+3. Investigación y comprensión de usuarios
+3.1 Fuentes de información
+Fuente Propósito Evidencia
+Entrevista Comprender objetivos, frustraciones y Guion, notas o síntesis.
+lenguaje.
+Observación contextual Identificar el proceso real y sus Registro del flujo actual.
+excepciones.
+Encuesta Obtener patrones cuantitativos básicos. Instrumento y resultados.
+Analítica o registros Detectar frecuencia, errores o abandonos. Reporte anonimizado.
+Taller con stakeholders Alinear necesidades y prioridades. Acta y acuerdos.
+Prueba de producto existente Detectar problemas de uso. Hallazgos y severidad.
+3.2 Perfil o persona
+Campo Contenido
+ID PER-___
+Nombre del perfil Rol representativo, no necesariamente persona real.
+Objetivos Qué necesita lograr.
+Tareas frecuentes Acciones principales y frecuencia.
+Conocimientos y habilidades Nivel digital, experiencia y lenguaje.
+Contexto de uso Dispositivo, ubicación, conectividad y entorno.
+Necesidades de accesibilidad Visuales, motoras, cognitivas, auditivas u otras.
+Frustraciones y riesgos Barreras, errores y consecuencias.
+Motivadores Razones para adoptar la solución.
+Requisitos / historias relacionadas RF-___ / HU-___
+Fuente de validación Entrevista, observación, datos u otra.
+3.3 Mapa de necesidades
+ID Perfil Necesidad Problema actual Impacto Evidencia Prioridad
+NEC-001 PER-___ Alta
+NEC-002
+Cuidado metodológico
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 9 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Una persona no debe inventarse solo para decorar el documento. Debe resumir información observada o validada.
+Cuando no sea posible investigar directamente, registre la limitación y use un representante funcional autorizado.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 10 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+4. Arquitectura de información
+4.1 Inventario de contenidos y funciones
+ID
+Co
+fu
+n
+n
+te
+c
+n
+ió
+id
+n
+o /
+Usuario Frecuencia Prioridad
+p
+U
+r
+b
+o
+i
+p
+ca
+u
+c
+e
+i
+s
+ó
+t
+n
+a
+Fuente
+CONT-001 PER-___ Alta / media / baja Must Módulo / sección RF-___
+CONT-002
+4.2 Estructura de navegación
+Nivel Elemento Objetivo Usuarios Elementos hijos Reglas de acceso
+1 Inicio / Dashboard
+1 Módulo A
+2 Submódulo A.1
+4.3 Mapa del sitio
+Incluya el mapa del sitio o arquitectura de información en una herramienta editable. Debe mostrar jerarquía,
+agrupación y rutas principales, sin reemplazar el flujo detallado de tareas.
+ID diagrama Nombre Versión Ubicación Validado por Fecha
+DIA-IA-01 Mapa general de
+navegación
+DIA-IA-02 Arquitectura móvil
+4.4 Criterios de calidad
+● Las etiquetas usan el lenguaje de los usuarios.
+● La ubicación de contenidos es predecible.
+● No existen rutas duplicadas sin justificación.
+● Los permisos se reflejan sin depender solo de ocultar botones.
+● Los flujos críticos requieren pocos pasos razonables.
+● Se conserva orientación mediante títulos, breadcrumbs o estados de navegación cuando aplique.
+5. Flujos de usuario y navegación
+5.1 Catálogo de flujos
+ID Nombre Actor Objetivo Inicio Fin
+H
+re
+i
+q
+st
+u
+o
+is
+ri
+i
+a
+to
+s
+s
+/
+Prioridad
+FLU-001 PER-___ HU-___ / Alta
+RF-___
+FLU-002
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 11 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+5.2 Ficha de flujo
+Campo Contenido
+ID y nombre FLU-___ – __________________________
+Actor / perfil
+Objetivo y valor
+Disparador
+Precondiciones
+Camino feliz Pasos principales.
+Alternativas Variaciones válidas.
+Errores y recuperación Qué ocurre y cómo continúa el usuario.
+Permisos Acciones permitidas y denegadas.
+Datos requeridos Entradas, formatos y dependencias.
+Pantallas relacionadas UI-___
+Historias / casos HU-___ / CU-___
+Criterios de éxito Resultado observable.
+Evidencia Enlace a diagrama o prototipo.
+5.3 Reglas de navegación
+ID Origen Acción Destino Condición
+Compo
+re
+rt
+t
+a
+o
+m
+rn
+i
+o
+en to de
+NAV-001 UI-___ Seleccionar / enviar UI-___
+NAV-002
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 12 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+6. Inventario y especificación de pantallas
+6.1 Inventario maestro
+ID
+Pa
+v
+n
+i
+t
+s
+a
+t
+l
+a
+la /
+Tipo Actor Objetivo Flujo HU / RF Estado Versión
+UI-001 Página / PER-___ FLU-___ HU-___ / Borrador 0.1
+modal / panel RF-___
+UI-002
+6.2 Ficha de pantalla
+Campo Contenido
+ID y nombre UI-___ – __________________________
+Objetivo Resultado que facilita.
+Usuarios / roles
+Requisitos e historias RF-___ / HU-___
+Flujo relacionado FLU-___
+Datos mostrados Fuente, formato y sensibilidad.
+Acciones disponibles Crear, consultar, actualizar, confirmar, cancelar, etc.
+Reglas y validaciones RN-___
+Permisos Permitido, denegado y comportamiento visible.
+Componentes CMP-UI-___
+Estados Inicial, carga, vacío, éxito, error, etc.
+Navegación Origen, destino y retorno.
+Responsive Comportamiento por breakpoint.
+Accesibilidad Foco, etiquetas, semántica, contraste.
+Prototipo Enlace y versión.
+Responsable de aprobación
+Estado Borrador / En revisión / Aprobado / Obsoleto
+6.3 Matriz pantalla–rol–acción
+Pantalla Rol Consultar Crear Editar
+d
+E
+e
+l
+s
+im
+ac
+in
+ti
+a
+v
+r
+a
+/
+r
+Exportar Observaciones
+UI-___ ROL-___ Sí Sí No No No
+UI-___
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 13 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 14 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+7. Wireframes
+Los wireframes representan estructura, jerarquía y navegación antes de definir el acabado visual. Deben ser
+rápidos de modificar y suficientemente claros para validar el flujo.
+7.1 Registro de wireframes
+ID Pantalla Objetivo Formato Versión Ubicación Estado Validado por
+WF-001 UI-001 Baja fidelidad 0.1 En revisión
+WF-002
+7.2 Contenido mínimo por wireframe
+● Código y nombre de pantalla.
+● Jerarquía de información.
+● Controles y acciones principales.
+● Navegación asociada.
+● Estados relevantes.
+● Notas de reglas o restricciones.
+● Relación con historia, caso de uso o requisito.
+7.3 Criterios de aprobación
+Criterio Cumple Observación
+La estructura soporta la tarea principal. Sí / No
+La jerarquía visual es comprensible sin Sí / No
+decoración.
+La navegación coincide con el flujo Sí / No
+aprobado.
+Se consideran errores y estados vacíos. Sí / No
+No se agregan funcionalidades fuera del Sí / No
+alcance.
+8. Mockups y prototipos
+8.1 Registro de mockups
+ID Pantalla Dispositivo Versión Enlace Estado Aprobación
+MK-001 UI-001 Escritorio 0.5 En revisión
+MK-002 Móvil
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 15 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+8.2 Registro de prototipos
+ID Flujo Nivel Versión Enlace Instrucciones Validado por
+PRT-001 FLU-001 Interactivo 0.8 Credenciales y
+ruta de prueba
+PRT-002
+8.3 Reglas de versionamiento
+● El enlace compartido debe corresponder a una versión identificable.
+● Los cambios posteriores a una aprobación deben registrarse.
+● Las capturas del documento deben indicar versión y fecha.
+● Los componentes repetidos deben derivarse del sistema de diseño.
+● El prototipo no sustituye los criterios de aceptación ni las pruebas.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 16 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+9. Estados y comportamiento de interfaz
+9.1 Estados obligatorios
+Estado Descripción Comportamiento esperado
+Inicial Vista antes de interacción. Presenta contexto y acción principal.
+Carga El sistema procesa o consulta. Evita acciones duplicadas y comunica
+progreso.
+Vacío No existen datos. Explica la situación y propone acción útil.
+Éxito Operación completada. Confirma resultado y siguiente paso.
+Error de validación Datos inválidos o incompletos. Indica campo, causa y corrección.
+Error del sistema Fallo técnico o dependencia. Mensaje seguro, opción de reintento o
+soporte.
+Permiso insuficiente Acción no autorizada. No expone información sensible y orienta.
+Sesión expirada La autenticación ya no es válida. Protege datos y permite reingreso
+controlado.
+Sin conexión No hay conectividad, cuando aplique. Indica limitación y recuperación.
+Confirmación Acción sensible o irreversible. Explica consecuencia y ofrece cancelar.
+9.2 Matriz de estados por pantalla
+Pantalla Inicial Carga Vacío Éxito Validación Error Permiso Sesión
+Obse
+n
+rv ació
+UI-___ Sí Sí N.A. Sí Sí Sí Sí Sí
+UI-___
+9.3 Mensajes y prevención de errores
+● No usar mensajes vagos como “Algo salió mal” sin orientación.
+● No borrar información sin confirmación o mecanismo de recuperación cuando el riesgo lo requiera.
+● No revelar detalles internos, credenciales o existencia de usuarios.
+● Conservar los datos válidos cuando un formulario falla.
+● Deshabilitar acciones duplicadas durante el procesamiento.
+10. Diseño responsive y compatibilidad
+10.1 Dispositivos y breakpoints
+Perfil Rango / dispositivo Prioridad Orientación Criterio de aceptación
+Móvil Alta Vertical Sin desbordamiento
+horizontal y controles
+táctiles accesibles.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 17 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Perfil Rango / dispositivo Prioridad Orientación Criterio de aceptación
+Tableta Condicionada
+Escritorio Alta Horizontal Aprovecha espacio sin
+perder jerarquía.
+10.2 Matriz de comportamiento responsive
+Componente / pantalla Móvil Tableta Escritorio Regla
+Navegación
+Tabla de datos
+Formulario
+Modal / panel
+10.3 Compatibilidad
+Plataforma Versión objetivo Prioridad Método de prueba Resultado
+Chrome Alta Manual / automatizada
+Firefox Condicionada
+Edge Condicionada
+Android / iOS Según alcance
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 18 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+11. Accesibilidad
+El diseño debe atender los criterios WCAG AA aplicables al alcance y demostrar que los flujos principales
+pueden usarse sin barreras evitables.
+11.1 Lista mínima de verificación
+N.° Criterio Cumple Evidencia
+1 Contraste suficiente entre texto, Sí / No
+iconos y fondo.
+2 Foco visible y orden lógico de Sí / No
+teclado.
+3 Campos con etiquetas Sí / No
+persistentes y mensajes
+asociados.
+4 Controles con nombre accesible y Sí / No
+propósito claro.
+5 La información no depende Sí / No
+únicamente del color.
+6 Tamaño de texto legible y zoom Sí / No
+sin pérdida funcional.
+7 Imágenes informativas con Sí / No / N.A.
+alternativa textual.
+8 Tablas con encabezados y Sí / No / N.A.
+estructura comprensible.
+9 Modales y menús gestionan foco Sí / No / N.A.
+correctamente.
+10 Mensajes de error son Sí / No
+identificables y corregibles.
+11 Objetivos táctiles tienen tamaño y Sí / No / N.A.
+separación adecuados.
+12 Animaciones respetan reducción Sí / No / N.A.
+de movimiento cuando aplica.
+11.2 Registro de hallazgos
+ID
+co
+P
+m
+an
+p
+t
+o
+a
+n
+ll
+e
+a
+n
+/
+t e
+Criterio Severidad Hallazgo Acción Estado
+ACC-001 UI-___ / CMP-___ Alta Abierto
+ACC-002
+Aclaración importante
+Accesibilidad no significa únicamente contraste. Incluye estructura semántica, operación por teclado, foco, etiquetas,
+mensajes, tamaño táctil, comprensión y compatibilidad con tecnologías de asistencia.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 19 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 20 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+12. Sistema de diseño
+12.1 Principios y alcance
+El sistema de diseño reúne reglas, tokens, componentes, patrones, documentación y criterios de
+implementación. Debe ser suficientemente pequeño para el proyecto, pero consistente y reutilizable.
+12.2 Design tokens
+Categoría Token Valor Uso Restricción
+Color color.primary.500 Acción principal Validar contraste.
+Tipografía font.heading.lg Título de página
+Espaciado space.4 Separación estándar
+Radio radius.md Contenedores y controles
+Sombra shadow.sm Elevación sutil No usar como única señal.
+Movimiento motion.fast Transición breve Respetar reduced motion.
+12.3 Paleta de colores
+Token Muestra / hexadecimal Uso Contraste validado Observaciones
+color.primary.500 Acciones principales Sí / No
+color.success.500 Confirmaciones Sí / No
+color.warning.500 Advertencias Sí / No
+color.error.500 Errores Sí / No
+color.neutral.900 Texto principal Sí / No
+color.surface Fondos Sí / No
+12.4 Tipografía
+Token Fuente Peso Tamaño / línea Uso Responsive
+font.display 700 Portada / hero
+font.heading.lg 700 Título de página
+font.heading.md 600 Sección
+font.body.md 400 Texto general
+font.label 500 Etiquetas
+font.caption 400 Ayuda secundaria
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 21 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+12.5 Espaciado, grid y breakpoints
+Elemento Escala / valor Regla de uso
+Unidad base Ej. 4 u 8 px, aplicada de forma consistente.
+Contenedor Ancho máximo y márgenes.
+Grid Columnas, gutter y comportamiento.
+Breakpoints Móvil, tableta y escritorio definidos por
+contenido.
+Densidad Evitar controles demasiado compactos.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 22 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+13. Componentes y patrones
+13.1 Catálogo de componentes
+ID Componente Variantes Estados Uso No usar cuando Implementación
+CMP-UI-001 Botón Primario / Default, hover,
+secundario / peligro focus, disabled,
+loading
+CMP-UI-002 Campo de texto
+CMP-UI-003 Select / combobox
+CMP-UI-004 Tabla
+CMP-UI-005 Modal
+13.2 Ficha de componente
+Campo Contenido
+ID y nombre CMP-UI-___ – __________________________
+Propósito Problema que resuelve.
+Anatomía Partes internas.
+Variantes Tamaño, jerarquía o contexto.
+Estados Default, hover, focus, active, disabled, loading, error.
+Contenido Reglas de etiqueta, iconos y ayuda.
+Comportamiento Interacción con mouse, teclado y táctil.
+Accesibilidad Rol, nombre, foco y atributos.
+Responsive Cambios según espacio.
+Tokens Color, tipografía, espaciado y movimiento.
+Ejemplos correctos
+Ejemplos incorrectos
+Código / librería Componente implementado o referencia.
+Pruebas Visuales, unitarias o accesibilidad.
+Versión y estado
+13.3 Patrones funcionales
+Patrón Objetivo Reglas mínimas
+Formulario Capturar datos con prevención y Etiquetas persistentes, ayuda, validación y
+recuperación de errores. resumen de error cuando aplique.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 23 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Patrón Objetivo Reglas mínimas
+Tabla y filtros Explorar volúmenes de datos. Orden, filtros, paginación, estado vacío y
+accesibilidad.
+Confirmación sensible Evitar acciones accidentales. Consecuencia clara, acción primaria
+específica y cancelar.
+Carga de archivos Seleccionar, validar y confirmar. Formato, tamaño, progreso, error y
+eliminación.
+Notificación Informar sin interrumpir innecesariamente. Severidad, duración y acción relacionada.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 24 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+14. UX writing y contenido
+14.1 Voz y tono
+Atributo Aplicación Evitar
+Claro Frases directas y vocabulario del usuario. Jerga técnica innecesaria.
+Respetuoso No culpa al usuario. “Usted se equivocó”.
+Accionable Indica qué ocurrió y qué hacer. Mensajes sin siguiente paso.
+Consistente Mismos términos para mismos conceptos. Sinónimos confusos.
+Breve Elimina palabras que no aportan. Párrafos largos en alertas.
+14.2 Catálogo de mensajes
+ID Contexto Tipo Mensaje Acción
+co
+P
+m
+an
+p
+t
+o
+a
+n
+ll
+e
+a
+n
+/
+t e
+MSG-001 Operación Éxito UI-___
+completada
+MSG-002 Dato inválido Validación
+MSG-003 Sin permiso Error seguro
+MSG-004 Sin resultados Vacío
+14.3 Reglas de contenido
+● Los botones describen la acción: “Guardar cambios”, no “Aceptar” cuando pueda ser ambiguo.
+● Los placeholders no sustituyen etiquetas.
+● Los errores se ubican cerca del campo y se anuncian de forma accesible.
+● Las fechas, monedas y unidades usan formato consistente.
+● Las confirmaciones sensibles nombran el objeto y la consecuencia.
+● El contenido de ayuda no oculta reglas críticas.
+15. Pruebas de usabilidad y validación
+15.1 Plan de prueba
+Campo Contenido
+ID USAB-___
+Objetivo
+Hipótesis
+Perfiles participantes
+Cantidad y selección
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 25 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Campo Contenido
+Tareas críticas
+Prototipo / versión
+Modalidad Moderada / no moderada / presencial / remota
+Métricas Éxito, tiempo, errores, satisfacción, comentarios.
+Criterio de aprobación
+Responsable
+Fecha
+15.2 Guion de tareas
+ID Escenario Tarea Éxito esperado Dato a observar
+TAR-USAB-01
+TAR-USAB-02
+15.3 Registro de resultados
+Participante Tarea Completó Tiempo Errores Hallazgo Severidad
+P-01 TAR-USAB-01 Sí / No
+P-02
+15.4 Hallazgos y decisiones
+ID Hallazgo Evidencia Severidad Decisión Responsable Estado
+UXH-001 Alta Abierto
+UXH-002
+Criterio de calidad
+No se considera validación preguntar solamente “¿le gusta?”. La prueba debe observar tareas concretas, errores,
+comprensión y capacidad de completar el flujo.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 26 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+16. Entrega a desarrollo y control de cambios
+16.1 Paquete de handoff
+Elemento Obligatorio Ubicación Responsable Verificación
+Prototipo versionado Sí
+Inventario de pantallas Sí
+Tokens y estilos Sí
+Componentes y estados Sí
+Assets exportables Según aplique
+Reglas responsive Sí
+Accesibilidad Sí
+Mensajes y contenido Sí
+Trazabilidad UI–HU–RF Sí
+Hallazgos pendientes Sí
+16.2 Registro de decisiones de diseño
+ID Fecha Contexto Alternativas Decisión Justificación Impacto Responsable
+DD-001
+DD-002
+16.3 Solicitud de cambio de diseño
+ID Origen
+s
+C
+ol
+a
+ic
+m
+it
+b
+a
+i
+d
+o
+o
+Motivo Impacto Decisión Versión Responsable
+CHG-UX-001 Aprobado /
+Rechazado
+CHG-UX-002
+16.4 Criterios de correspondencia con implementación
+● El componente implementado usa tokens y variantes documentados.
+● Las pantallas incluyen los estados definidos.
+● Las interacciones por teclado coinciden con la especificación.
+● Los textos corresponden al catálogo aprobado.
+● Los cambios de alcance o diseño tienen decisión registrada.
+● El prototipo no debe describir funcionalidades inexistentes en la entrega final.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 27 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+17. Trazabilidad, indicadores y aprobación
+17.1 Matriz resumida
+UI / flujo Perfil HU / CU RF / RNF Reglas Componente Prueba Evidencia Estado
+UI-___ / PER-___ HU-___ RF-___ RN-___ CMP-___ CP-___ EV-___
+FLU-___
+17.2 Indicadores sugeridos
+Indicador Fórmula / método Meta Frecuencia Fuente
+Cobertura de pantallas Pantallas trazadas / 100% Por versión Matriz
+pantallas inventariadas
+Flujos críticos validados Flujos aprobados / flujos 100% Antes de construir Actas / pruebas
+críticos
+Éxito de tareas Participantes que Definir por contexto Por prueba Resultados
+completan / participantes
+Hallazgos críticos abiertos Conteo 0 antes de entrega Semanal Registro UX
+Cobertura de estados Estados diseñados / 100% Por versión Ficha UI
+estados aplicables
+Componentes reutilizados Uso de componentes del Meta definida Por release Código / diseño
+sistema / total aplicable
+17.3 Lista de verificación final
+N.° Verificación Cumple Evidencia / observación
+1 Los perfiles y necesidades tienen Sí / No / N.A.
+fuente o validación.
+2 La arquitectura de información Sí / No / N.A.
+coincide con el alcance.
+3 Los flujos principales, alternativos Sí / No / N.A.
+y de error están documentados.
+4 Todas las pantallas tienen código Sí / No / N.A.
+y trazabilidad.
+5 Los prototipos están versionados Sí / No / N.A.
+y aprobados.
+6 Se diseñaron estados de carga, Sí / No / N.A.
+vacío, éxito, error y permisos.
+7 El comportamiento responsive Sí / No / N.A.
+está especificado.
+8 Los criterios básicos de Sí / No / N.A.
+accesibilidad fueron verificados.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 28 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+N.° Verificación Cumple Evidencia / observación
+9 El sistema de diseño contiene Sí / No / N.A.
+tokens, componentes y estados.
+10 Los textos y mensajes son Sí / No / N.A.
+consistentes y accionables.
+11 Existen resultados de pruebas de Sí / No / N.A.
+usabilidad o justificación de
+limitación.
+12 El paquete de handoff permite Sí / No / N.A.
+implementar sin ambigüedad.
+13 La interfaz implementada Sí / No / N.A.
+corresponde con la versión
+aprobada.
+14 Los cambios posteriores están Sí / No / N.A.
+registrados.
+17.4 Aprobación del documento
+Rol Nombre Decisión Fecha Firma / evidencia
+Responsable funcional Aprobado / Devuelto
+Usuario representante Aprobado / Devuelto
+Líder frontend Aprobado / Devuelto
+Instructor Aprobado / Devuelto
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 29 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Anexo A. Convenciones de identificación
+Elemento Prefijo Ejemplo
+Persona / perfil PER PER-001
+Necesidad NEC NEC-001
+Contenido CONT CONT-001
+Flujo FLU FLU-001
+Navegación NAV NAV-001
+Pantalla UI UI-001
+Wireframe WF WF-001
+Mockup MK MK-001
+Prototipo PRT PRT-001
+Componente UI CMP-UI CMP-UI-001
+Mensaje MSG MSG-001
+Prueba de usabilidad USAB USAB-001
+Hallazgo UX UXH UXH-001
+Decisión de diseño DD DD-001
+Cambio UX CHG-UX CHG-UX-001
+Anexo B. Estructura recomendada en el repositorio
+/docs/diseno/
+investigacion/
+arquitectura-informacion/
+flujos/
+pantallas/
+sistema-diseno/
+pruebas-usabilidad/
+decisiones/
+assets/
+README.md
+Anexo C. Evidencias mínimas por nivel de madurez
+Nivel Evidencia mínima
+Formulación Perfiles preliminares, mapa de navegación y wireframes de flujos
+críticos.
+Construcción inicial Mockups aprobados, inventario de pantallas, estados y reglas
+responsive.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
+
+--- PAGE 30 ---
+SENA – ADSO | Diseño UX/UI y Sistema de Diseño
+Nivel Evidencia mínima
+Producto funcional Prototipo, sistema de diseño, accesibilidad básica y pruebas de
+usabilidad.
+Producto profesional Biblioteca implementada, pruebas visuales, auditoría de
+accesibilidad y control de versiones.
+Producto avanzado Analítica, experimentación, métricas continuas y automatización
+visual.
+Anexo D. Errores frecuentes que deben evitarse
+● Diseñar primero y justificar después.
+● Usar placeholders como etiquetas.
+● Mostrar solamente el camino feliz.
+● Copiar un design system completo que el proyecto no necesita.
+● Usar colores sin comprobar contraste.
+● Crear pantallas sin permisos ni estados de error.
+● Aprobar interfaces solo por apariencia.
+● Pegar capturas sin versión ni enlace editable.
+● Cambiar el diseño durante desarrollo sin registrar impacto.
+● Documentar una interfaz distinta a la entregada.
+Cierre
+El documento se considera completo cuando otra persona puede comprender los usuarios, recorrer los flujos, localizar
+cada pantalla, implementar los componentes y verificar la experiencia sin depender de explicaciones informales del
+equipo.
+Documento de experiencia de usuario e interfaz | Versión 1.0 |
