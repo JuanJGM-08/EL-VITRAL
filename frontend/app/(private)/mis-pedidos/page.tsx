@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Script from 'next/script';
 
 interface PedidoDetalle {
   id: number;
@@ -66,6 +65,61 @@ export default function MisPedidosPage() {
         setPedidos([]);
         setLoading(false);
       });
+  }, []);
+
+  // Detect Stripe redirect back to /mis-pedidos and verify the session
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const success = params.get('checkout_success');
+      const cancel = params.get('checkout_cancel');
+      const sessionId = params.get('session_id') || params.get('checkout_session_id');
+      const pedidoId = params.get('pedido_id');
+      const tipoPago = params.get('tipo_pago');
+
+      if ((success === '1' || cancel === '1') && pedidoId) {
+        if (success === '1' && sessionId && tipoPago) {
+          (async () => {
+            try {
+              const res = await fetch(`/api/pedidos/${pedidoId}/pago-completado`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ stripe_session_id: sessionId, tipo_pago: tipoPago })
+              });
+
+              const data = await res.json().catch(() => null);
+              if (res.ok) {
+                setPedidos(prev => prev.map(p => p.id === Number(pedidoId)
+                  ? { ...p, pago: data?.pago || tipoPago, estado: data?.estado || p.estado }
+                  : p));
+              } else {
+                console.error('Pago verificación fallida', data);
+                alert(data?.error || data?.friendly || 'No se pudo verificar el pago.');
+              }
+            } catch (err) {
+              console.error('Error al llamar pago-completado:', err);
+              alert('Error al verificar el pago.');
+            } finally {
+              // Clean URL params so this runs only once
+              const url = new URL(window.location.href);
+              url.search = '';
+              window.history.replaceState({}, '', url.toString());
+            }
+          })();
+        } else {
+          // Cancel or missing data: just clean params
+          const url = new URL(window.location.href);
+          url.search = '';
+          window.history.replaceState({}, '', url.toString());
+          if (cancel === '1') {
+            alert('Se canceló el pago.');
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error processing Stripe redirect params', e);
+    }
   }, []);
 
   const verDetallesPedido = async (pedidoId: number) => {
@@ -146,47 +200,42 @@ export default function MisPedidosPage() {
     }
   };
 
-  const handleWompiPayment = (pedido: Pedido, tipo: 'anticipo' | 'pagado') => {
+  const handleStripePayment = (pedido: Pedido, tipo: 'anticipo' | 'pagado') => {
     const total = Number(pedido.total);
     if (!total || total <= 0) return;
 
-    const amountInCents = tipo === 'anticipo' ? Math.round((total / 2) * 100) : Math.round(total * 100);
-    const reference = `pedido_${pedido.id}_${Date.now()}`;
+    (async () => {
+      try {
+        const res = await fetch(`/api/pedidos/${pedido.id}/create-checkout-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ tipo_pago: tipo })
+        });
+        const data = await res.json().catch(() => null);
 
-    // @ts-ignore
-    const checkout = new window.WidgetCheckout({
-      currency: 'COP',
-      amountInCents: amountInCents,
-      reference: reference,
-      publicKey: 'pub_test_X0zDA9xoKdePzhd8a0x9HAez7HgGO2fH' // Clave Pública Sandbox Pruebas
-    });
-
-    checkout.open(async function (result: any) {
-      const transaction = result.transaction;
-      if (transaction && transaction.status === 'APPROVED') {
-        try {
-          const res = await fetch(`/api/pedidos/${pedido.id}/pago-completado`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ wompi_transaction_id: transaction.id, tipo_pago: tipo })
-          });
-          const data = await res.json();
-          if (res.ok) {
-            alert('¡Pago registrado correctamente!');
-            window.location.reload();
-          } else {
-            alert(`Error al registrar pago en servidor: ${data.error}`);
+        if (res.ok && data && data.session) {
+          const session = data.session;
+          if (session.url) {
+            window.location.href = session.url;
+            return;
           }
-        } catch (e) {
-          console.error(e);
-          alert('Error de conexión post-pago, contacta al administrador.');
+          if (session.id) {
+            window.location.href = `${process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000'}/?checkout_session_id=${session.id}&pedido_id=${pedido.id}`;
+            return;
+          }
         }
-      } else {
-        alert('El pago no fue aprobado o fue cancelado.');
+
+        const friendly = data?.friendly;
+        const detailMsg = data?.details ? JSON.stringify(data.details) : data?.error || 'Intenta de nuevo.';
+        alert('No se pudo crear la sesión de pago. ' + (friendly || detailMsg));
+      } catch (err) {
+        console.error('Error creando sesión de Stripe:', err);
+        alert('Error conectando con el servidor de pagos.');
+      } finally {
+        setPayModalPedido(null);
       }
-      setPayModalPedido(null);
-    });
+    })();
   };
 
   if (loading) {
@@ -260,7 +309,7 @@ export default function MisPedidosPage() {
                             Ver detalles
                           </button>
 
-                          {(pedido.pago === 'pendiente' || !pedido.pago) && (
+                          {pedido.pago !== 'pagado' && (
                             <button
                               onClick={() => setPayModalPedido(pedido)}
                               className="text-emerald-400 hover:text-emerald-300 font-bold"
@@ -445,7 +494,7 @@ export default function MisPedidosPage() {
         </div>
       )}
 
-      {/* Modal de Pago Wompi */}
+      {/* Modal de Pago (Stripe) */}
       {payModalPedido && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="rounded-lg shadow-xl max-w-sm w-full mx-4 p-6" style={{ backgroundColor: '#1e2939' }}>
@@ -459,24 +508,29 @@ export default function MisPedidosPage() {
             </p>
 
             <div className="flex flex-col gap-3">
+              {payModalPedido.pago !== 'anticipo' && (
+                <button
+                  onClick={() => handleStripePayment(payModalPedido, 'anticipo')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md transition-colors font-semibold"
+                >
+                  Pagar Anticipo (50%) - ${formatNumber(Number(payModalPedido.total) / 2)}
+                </button>
+              )}
               <button
-                onClick={() => handleWompiPayment(payModalPedido, 'anticipo')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md transition-colors font-semibold"
-              >
-                Pagar Anticipo (50%) - ${formatNumber(Number(payModalPedido.total) / 2)}
-              </button>
-              <button
-                onClick={() => handleWompiPayment(payModalPedido, 'pagado')}
+                onClick={() => handleStripePayment(payModalPedido, 'pagado')}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-md transition-colors font-semibold"
               >
-                Pagar Total (100%) - ${formatNumber(Number(payModalPedido.total))}
+                {payModalPedido.pago === 'anticipo' ? 'Pagar saldo pendiente' : 'Pagar Total (100%)'} - ${formatNumber(
+                  payModalPedido.pago === 'anticipo'
+                    ? Number(payModalPedido.total) - Math.round(Number(payModalPedido.total) / 2)
+                    : Number(payModalPedido.total)
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <Script src="https://checkout.wompi.co/widget.js" strategy="afterInteractive" />
     </div>
   );
 }

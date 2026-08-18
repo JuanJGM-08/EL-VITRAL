@@ -103,7 +103,7 @@ async function notifyPaymentReceived(adminEmails, pedidoId, amountPaid, isAntici
   const subject = `Pago Recibido: Pedido #${pedidoId}`;
   const html = `
     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px;">
-      <h2 style="color: #2563eb;">Pago Confirmado por Wompi</h2>
+      <h2 style="color: #2563eb;">Pago Confirmado</h2>
       <p>Se ha registrado un pago exitoso para el pedido <strong>#${pedidoId}</strong>.</p>
       <ul>
         <li><strong>Tipo de Pago:</strong> ${tipo}</li>

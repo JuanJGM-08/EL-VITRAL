@@ -31,6 +31,8 @@ interface Usuario {
   direccion?: string;
 }
 
+const MINIMUM_QUOTE_TOTAL_COP = 10000;
+
 const formatNumber = (value: number): string => {
   return new Intl.NumberFormat('es-CO', {
     minimumFractionDigits: 0,
@@ -213,6 +215,11 @@ export default function CotizarPage() {
 
     if (items.length === 0) {
       showModal('Debe agregar al menos un producto a la cotización.');
+      return;
+    }
+
+    if (calcularTotales().total < MINIMUM_QUOTE_TOTAL_COP) {
+      showModal('El valor mínimo para una cotización es de $10.000 COP. Agrega productos o ajusta las cantidades para continuar.');
       return;
     }
 
