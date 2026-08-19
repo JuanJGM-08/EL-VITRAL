@@ -37,6 +37,37 @@ const { notifyOrderCreated, notifyOrderStateChange, notifyAppointment, notifySto
 
 const port = process.env.PORT || 4000;
 const isProduction = process.env.NODE_ENV === 'production';
+const COP_CURRENCY = 'cop';
+// COP is a two-decimal currency in Stripe's API: $10.000 COP must be sent as
+// 1.000.000 minor units, not as 10.000.
+const COP_MINOR_UNIT_MULTIPLIER = 100;
+const MINIMUM_QUOTE_TOTAL_COP = 10000;
+
+function toStripeCopAmount(amountInCop) {
+  return Math.round(Number(amountInCop) * COP_MINOR_UNIT_MULTIPLIER);
+}
+
+function getPaymentAmountInCop(total, currentPaymentStatus, paymentType) {
+  const normalizedTotal = Math.round(Number(total));
+  if (!Number.isFinite(normalizedTotal) || normalizedTotal < MINIMUM_QUOTE_TOTAL_COP) {
+    return null;
+  }
+
+  if (paymentType === 'anticipo') {
+    return currentPaymentStatus === 'pendiente' ? Math.round(normalizedTotal / 2) : null;
+  }
+
+  if (paymentType === 'pagado') {
+    // A customer who already paid the deposit only pays the outstanding balance.
+    return currentPaymentStatus === 'anticipo'
+      ? normalizedTotal - Math.round(normalizedTotal / 2)
+      : currentPaymentStatus === 'pendiente'
+        ? normalizedTotal
+        : null;
+  }
+
+  return null;
+}
 
 // Crear app Express solo para Swagger
 const expressApp = express();
@@ -1695,6 +1726,11 @@ async function handleRequest(req, res) {
 
       subtotal = Number(subtotal.toFixed(2));
       const total = subtotal;
+      if (total < MINIMUM_QUOTE_TOTAL_COP) {
+        return sendJSON(res, 400, {
+          error: `El valor mínimo para una cotización es de $${MINIMUM_QUOTE_TOTAL_COP.toLocaleString('es-CO')} COP`,
+        });
+      }
       const codigo = generateUniqueCode();
 
       const result = await query(
@@ -1896,6 +1932,101 @@ async function handleRequest(req, res) {
       return sendPDF(res, `pedido-${pedidoId}.pdf`, (doc) => buildPedidoPdf(doc, pedido, Array.isArray(detalles) ? detalles.map(formatNumericRow) : []));
     }
 
+    // Create Stripe Checkout Session
+    if (parts[0] === 'api' && parts[1] === 'pedidos' && parts[2] && parts[3] === 'create-checkout-session' && method === 'POST') {
+      const pedidoId = Number(parts[2]);
+      if (Number.isNaN(pedidoId)) {
+        return sendJSON(res, 400, { error: 'ID de pedido inválido' });
+      }
+
+      const userData = getUserFromRequest(req);
+      if (!userData) {
+        return sendJSON(res, 401, { error: 'No autorizado' });
+      }
+
+      const rows = await query('SELECT * FROM pedidos WHERE id = ?', [pedidoId]);
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return sendJSON(res, 404, { error: 'Pedido no encontrado' });
+      }
+      const pedido = formatNumericRow(rows[0]);
+      if (!isAdmin(userData) && pedido.usuario_id !== userData.id) {
+        return sendJSON(res, 403, { error: 'No autorizado' });
+      }
+
+      const body = await parseBody(req);
+      const tipoPago = sanitizeString(body.tipo_pago || 'pagado');
+      const total = Number(pedido.total);
+      const amountInCop = getPaymentAmountInCop(total, pedido.pago || 'pendiente', tipoPago);
+      if (!amountInCop) {
+        return sendJSON(res, 400, {
+          error: 'La modalidad de pago no está disponible para el estado actual del pedido',
+        });
+      }
+      const unitAmount = toStripeCopAmount(amountInCop);
+
+      const stripeSecret = process.env.STRIPE_SECRET_KEY;
+      if (!stripeSecret) {
+        return sendJSON(res, 500, { error: 'STRIPE_SECRET_KEY no configurada en el servidor' });
+      }
+
+      try {
+        const params = new URLSearchParams();
+        params.append('payment_method_types[]', 'card');
+        params.append('mode', 'payment');
+        params.append('line_items[0][price_data][currency]', COP_CURRENCY);
+        params.append('line_items[0][price_data][product_data][name]', `Pedido #${pedidoId}`);
+        params.append('line_items[0][price_data][unit_amount]', String(unitAmount));
+        params.append('line_items[0][quantity]', '1');
+        params.append('success_url', `${process.env.FRONTEND_URL || 'http://localhost:3000'}/mis-pedidos?checkout_success=1&session_id={CHECKOUT_SESSION_ID}&pedido_id=${pedidoId}&tipo_pago=${tipoPago}`);
+        params.append('cancel_url', `${process.env.FRONTEND_URL || 'http://localhost:3000'}/mis-pedidos?checkout_cancel=1&pedido_id=${pedidoId}&tipo_pago=${tipoPago}`);
+        params.append(`metadata[pedido_id]`, String(pedidoId));
+        params.append(`metadata[tipo_pago]`, tipoPago);
+        params.append(`metadata[pago_previo]`, pedido.pago || 'pendiente');
+        params.append(`metadata[monto_cop]`, String(amountInCop));
+        params.append(`payment_intent_data[metadata][pedido_id]`, String(pedidoId));
+        params.append(`payment_intent_data[metadata][tipo_pago]`, tipoPago);
+
+        const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${stripeSecret}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            // Prevent duplicated checkout sessions when a user clicks twice.
+            'Idempotency-Key': `pedido-${pedidoId}-${pedido.pago || 'pendiente'}-${tipoPago}`,
+          },
+          body: params.toString()
+        });
+
+        let data = null;
+        let textBody = null;
+        try {
+          data = await stripeRes.json();
+        } catch (e) {
+          try {
+            textBody = await stripeRes.text();
+          } catch (ee) {
+            textBody = null;
+          }
+        }
+        if (!stripeRes.ok) {
+          console.error('Error creating Stripe session', { status: stripeRes.status, body: data || textBody });
+          if (data && data.error && data.error.code === 'amount_too_small') {
+            return sendJSON(res, 400, {
+              error: 'No se pudo crear la sesión de Stripe',
+              status: stripeRes.status,
+              friendly: `El monto de $${amountInCop.toLocaleString('es-CO')} COP es demasiado pequeño para procesar con Stripe.`,
+            });
+          }
+          return sendJSON(res, 400, { error: data?.error?.message || 'No se pudo crear la sesión de Stripe', status: stripeRes.status });
+        }
+
+        return sendJSON(res, 200, { message: 'Stripe session creada', session: data, amount_cop: amountInCop });
+      } catch (err) {
+        console.error('Error creando Stripe session:', err);
+        return sendJSON(res, 500, { error: 'Error creando la sesión de Stripe' });
+      }
+    }
+
     if (parts[0] === 'api' && parts[1] === 'pedidos' && parts[2] && parts[3] === 'pago-completado' && method === 'POST') {
       const pedidoId = Number(parts[2]);
       if (Number.isNaN(pedidoId)) {
@@ -1907,10 +2038,10 @@ async function handleRequest(req, res) {
       }
 
       const body = await parseBody(req);
-      const transactionId = sanitizeString(body.wompi_transaction_id || '');
+      const stripeSessionId = sanitizeString(body.stripe_session_id || '');
       const tipoPago = sanitizeString(body.tipo_pago || ''); // 'anticipo' o 'pagado'
 
-      if (!transactionId || !['anticipo', 'pagado'].includes(tipoPago)) {
+      if (!stripeSessionId || !['anticipo', 'pagado'].includes(tipoPago)) {
         return sendJSON(res, 400, { error: 'Datos de pago faltantes o inválidos' });
       }
 
@@ -1928,43 +2059,65 @@ async function handleRequest(req, res) {
         return sendJSON(res, 400, { error: 'El pedido ya se encuentra totalmente pagado' });
       }
 
-      // Vefify with Wompi Sandbox
+      // Verify with Stripe
       try {
-        const wompiRes = await fetch(`https://sandbox.wompi.co/v1/transactions/${transactionId}`);
-        if (!wompiRes.ok) {
-          return sendJSON(res, 400, { error: 'No se pudo verificar la transacción con Wompi' });
+        const stripeSecret = process.env.STRIPE_SECRET_KEY;
+        if (!stripeSecret) {
+          return sendJSON(res, 500, { error: 'STRIPE_SECRET_KEY no configurada en el servidor' });
         }
-        const wompiData = await wompiRes.json();
-        const transaction = wompiData.data;
 
-        if (transaction.status !== 'APPROVED') {
+        const stripeRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${stripeSessionId}?expand[]=payment_intent`, {
+          headers: {
+            'Authorization': `Bearer ${stripeSecret}`,
+          }
+        });
+
+        if (!stripeRes.ok) {
+          const errBody = await stripeRes.text().catch(() => null);
+          console.error('Error verifying Stripe session', errBody);
+          return sendJSON(res, 400, { error: 'No se pudo verificar la sesión de Stripe' });
+        }
+
+        const stripeData = await stripeRes.json();
+        const paymentIntent = typeof stripeData.payment_intent === 'object' ? stripeData.payment_intent : null;
+
+        const paid = stripeData.payment_status === 'paid' || (paymentIntent && paymentIntent.status === 'succeeded');
+        if (!paid) {
           return sendJSON(res, 400, { error: 'La transacción no está aprobada' });
         }
 
-        // Convert to cents
-        const total = Number(pedido.total);
-        const expectedCents = tipoPago === 'anticipo' ? Math.round((total / 2) * 100) : Math.round(total * 100);
-
-        if (transaction.amount_in_cents !== expectedCents) {
-          console.warn(`Discrepancia en monto: esperado ${expectedCents}, recibido ${transaction.amount_in_cents}`);
-          // Just a warning for now, but in production we would reject it. Given it's sandbox and precision can vary, we let it pass if it's close.
+        const metadata = stripeData.metadata || {};
+        if (
+          stripeData.currency !== COP_CURRENCY ||
+          Number(metadata.pedido_id) !== pedidoId ||
+          metadata.tipo_pago !== tipoPago ||
+          metadata.pago_previo !== (pedido.pago || 'pendiente')
+        ) {
+          return sendJSON(res, 400, { error: 'La sesión de pago no corresponde a este pedido' });
         }
 
-        // Update Order
-        await query('UPDATE pedidos SET pago = ? WHERE id = ?', [tipoPago, pedidoId]);
+        const amountReceived = stripeData.amount_total || (paymentIntent && paymentIntent.amount) || 0;
+        const total = Number(pedido.total);
+        const amountInCop = getPaymentAmountInCop(total, pedido.pago || 'pendiente', tipoPago);
+        const expectedAmount = amountInCop ? toStripeCopAmount(amountInCop) : null;
+        if (amountReceived !== expectedAmount) {
+          console.warn(`Discrepancia en monto Stripe: esperado ${expectedAmount}, recibido ${amountReceived}`);
+          return sendJSON(res, 400, { error: 'El monto recibido no corresponde al pago del pedido' });
+        }
+
+        const nuevoEstado = pedido.estado === 'pendiente' ? 'en_proceso' : pedido.estado;
+        await query('UPDATE pedidos SET pago = ?, estado = ? WHERE id = ?', [tipoPago, nuevoEstado, pedidoId]);
 
         // Send Email to Admins
         const admins = await query("SELECT email FROM usuarios WHERE rol = 'admin' AND activo = 1");
         if (Array.isArray(admins) && admins.length > 0) {
-          const isAnticipo = tipoPago === 'anticipo';
-          const amountPaid = transaction.amount_in_cents / 100;
-          notifyPaymentReceived(admins.map(a => a.email), pedidoId, amountPaid, isAnticipo);
+          await notifyPaymentReceived(admins.map(a => a.email), pedidoId, amountInCop, tipoPago === 'anticipo');
         }
 
-        return sendJSON(res, 200, { message: 'Pago registrado correctamente' });
+        return sendJSON(res, 200, { message: 'Pago registrado correctamente', pago: tipoPago, estado: nuevoEstado });
       } catch (err) {
-        console.error('Error al procesar el pago Wompi:', err);
-        return sendJSON(res, 500, { error: 'Fallo al procesar verificación Wompi' });
+        console.error('Error al procesar el pago Stripe:', err);
+        return sendJSON(res, 500, { error: 'Fallo al procesar verificación Stripe' });
       }
     }
 

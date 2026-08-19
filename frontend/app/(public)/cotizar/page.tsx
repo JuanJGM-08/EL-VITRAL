@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
   
 interface Producto {
   id: number;
@@ -23,7 +23,15 @@ interface ItemCotizacion {
   precio: number;
 }
 
+interface Usuario {
+  id: number;
+  nombre: string;
+  email: string;
+  telefono?: string;
+  direccion?: string;
+}
 
+const MINIMUM_QUOTE_TOTAL_COP = 10000;
 
 const formatNumber = (value: number): string => {
   return new Intl.NumberFormat('es-CO', {
@@ -32,12 +40,12 @@ const formatNumber = (value: number): string => {
   }).format(value);
 };
 
-function CotizarForm() {
+export default function CotizarPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const productoInicial = searchParams.get('producto');
+  const [productoInicial, setProductoInicial] = useState<string | null>(null);
 
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [cliente, setCliente] = useState({
     nombre: '',
     email: '',
@@ -81,6 +89,7 @@ function CotizarForm() {
       })
       .then(data => {
         setIsLoggedIn(true);
+        setUsuario(data);
         setCliente({
           nombre: data.nombre || '',
           email: data.email || '',
@@ -94,11 +103,13 @@ function CotizarForm() {
   }, []);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setProductoInicial(params.get('producto'));
+  }, []);
+
+  useEffect(() => {
     if (productoInicial) {
-      const t = setTimeout(() => {
-        setProductoActual(prev => ({ ...prev, producto_id: productoInicial }));
-      }, 0);
-      return () => clearTimeout(t);
+      setProductoActual(prev => ({ ...prev, producto_id: productoInicial }));
     }
   }, [productoInicial]);
 
@@ -164,22 +175,12 @@ function CotizarForm() {
     });
   };
 
-  const actualizarItem = (
-    index: number,
-    campo: 'cantidad' | 'medida_largo' | 'medida_ancho',
-    valor: number | undefined
-  ) => {
+  const actualizarItem = (index: number, campo: string, valor: any) => {
     const nuevosItems = [...items];
     const item = nuevosItems[index];
     if (!item) return;
 
-    if (campo === 'cantidad' && typeof valor === 'number') {
-      item.cantidad = valor;
-    } else if (campo === 'medida_largo') {
-      item.medida_largo = valor;
-    } else if (campo === 'medida_ancho') {
-      item.medida_ancho = valor;
-    }
+    (item as any)[campo] = valor;
 
     if (campo === 'cantidad' || campo === 'medida_largo' || campo === 'medida_ancho') {
       const producto = productos.find(p => p.id === item.producto_id);
@@ -217,6 +218,11 @@ function CotizarForm() {
       return;
     }
 
+    if (calcularTotales().total < MINIMUM_QUOTE_TOTAL_COP) {
+      showModal('El valor mínimo para una cotización es de $10.000 COP. Agrega productos o ajusta las cantidades para continuar.');
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch('/api/cotizaciones', {
@@ -240,7 +246,7 @@ function CotizarForm() {
       } else {
         showModal(data.error || 'Error al crear cotización.');
       }
-    } catch {
+    } catch (error) {
       showModal('Error al conectar con el servidor. Intenta nuevamente.');
     } finally {
       setLoading(false);
@@ -251,10 +257,10 @@ function CotizarForm() {
 
   if (isLoggedIn === null) {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-8 flex items-center justify-center">
-        <div className="max-w-3xl w-full mx-auto p-6 sm:p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">Cargando tu cotización...</h2>
-          <p className="text-sm sm:text-base text-slate-400">Un momento mientras preparamos los productos disponibles.</p>
+      <div className="min-h-screen bg-slate-950">
+        <div className="max-w-3xl mx-auto mt-20 p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700">
+          <h2 className="text-3xl font-bold text-white text-center mb-4">Cargando tu cotización...</h2>
+          <p className="text-center text-slate-400">Un momento mientras preparamos los productos disponibles.</p>
         </div>
       </div>
     );
@@ -262,14 +268,14 @@ function CotizarForm() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-8 flex items-center justify-center">
-        <div className="max-w-3xl w-full mx-auto p-6 sm:p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-6">Inicia sesión para cotizar</h2>
-          <div className="bg-amber-900/30 border border-amber-500 p-5 sm:p-6 rounded-3xl text-center">
-            <p className="text-base sm:text-lg text-white mb-4">Necesitamos tus datos para crear una cotización personalizada.</p>
+      <div className="min-h-screen bg-slate-950">
+        <div className="max-w-3xl mx-auto mt-20 p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700">
+          <h2 className="text-3xl font-bold text-white text-center mb-6">Inicia sesión para cotizar</h2>
+          <div className="bg-amber-900/30 border border-amber-500 p-6 rounded-3xl text-center">
+            <p className="text-lg text-white mb-4">Necesitamos tus datos para crear una cotización personalizada.</p>
             <button
               onClick={() => router.push('/login')}
-              className="inline-flex items-center justify-center gap-2 bg-primary text-white px-5 py-3 rounded-2xl hover:bg-secondary transition-colors text-sm sm:text-base font-semibold w-full sm:w-auto max-w-xs"
+              className="inline-flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-2xl hover:bg-secondary transition-colors"
             >
               Iniciar Sesión
             </button>
@@ -281,19 +287,19 @@ function CotizarForm() {
 
   if (resultado) {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-8 sm:py-12 flex items-center justify-center">
-        <div className="max-w-3xl w-full mx-auto p-5 sm:p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700">
-          <div className="text-center flex flex-col items-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">¡Cotización creada!</h2>
-            <p className="text-sm sm:text-base text-slate-300 mb-6">Tu cotización se ha generado correctamente.</p>
-            <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center gap-3 sm:gap-4 rounded-3xl border border-emerald-500/40 bg-emerald-900/20 px-4 py-5 sm:px-8 sm:py-6 min-w-0">
-              <p className="text-white text-base sm:text-lg">Código de cotización</p>
-              <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-primary break-all max-w-full text-center tracking-tight min-w-0">{resultado.codigo}</p>
+      <div className="min-h-screen bg-slate-950">
+        <div className="max-w-3xl mx-auto mt-20 p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">¡Cotización creada!</h2>
+            <p className="text-slate-300 mb-6">Tu cotización se ha generado correctamente.</p>
+            <div className="inline-flex flex-col items-center justify-center gap-4 rounded-3xl border border-emerald-500/40 bg-emerald-900/20 px-8 py-6">
+              <p className="text-white text-lg">Código de cotización</p>
+              <p className="text-5xl font-extrabold text-primary">{resultado.codigo}</p>
             </div>
-            <p className="text-xs sm:text-sm text-slate-400 mt-6 max-w-md">Recuerda llamar al <span className="text-white font-semibold">3137928483</span> para convertirla en pedido.</p>
+            <p className="text-slate-400 mt-6">Recuerda llamar al <span className="text-white">3137928483</span> para convertirla en pedido.</p>
             <button
               onClick={() => router.push('/catalogo')}
-              className="mt-8 inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3.5 rounded-2xl hover:bg-secondary transition-colors w-full sm:w-auto max-w-xs text-sm sm:text-base font-semibold shadow-lg"
+              className="mt-8 inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl hover:bg-secondary transition-colors"
             >
               Seguir explorando
             </button>
@@ -305,7 +311,7 @@ function CotizarForm() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-44 sm:pb-36 lg:pb-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-32 md:pb-10">
         <div className="rounded-3xl bg-slate-900/90 border border-slate-800 p-8 shadow-2xl">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
             <div>
@@ -509,25 +515,25 @@ function CotizarForm() {
 
       {/* Resumen flotante - visible en desktop y móvil */}
       {items.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 border-t border-slate-800 p-3.5 sm:p-4 sm:px-6 shadow-2xl backdrop-blur-md lg:bottom-6 lg:left-auto lg:right-6 lg:rounded-3xl lg:border lg:w-80 lg:p-5 lg:backdrop-blur-none">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-stretch lg:gap-0">
-            <div className="flex items-center justify-between gap-2 sm:gap-4 lg:block">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400 lg:mb-3">Resumen</p>
-              <div className="flex items-center gap-4 sm:gap-6 lg:block lg:space-y-3">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 border-t border-slate-800 p-4 shadow-2xl lg:bottom-6 lg:left-auto lg:right-6 lg:rounded-3xl lg:border lg:w-80 lg:p-5">
+          <div className="flex items-center justify-between lg:block">
+            <div className="flex items-center gap-4 lg:block">
+              <p className="text-sm uppercase tracking-[0.2em] text-slate-400 lg:mb-3">Resumen</p>
+              <div className="flex items-center gap-6 lg:block lg:space-y-3">
                 <div className="flex items-center gap-2 lg:flex lg:justify-between">
-                  <span className="text-slate-400 text-xs sm:text-sm">Productos</span>
-                  <span className="text-white font-semibold text-sm sm:text-base">{items.length}</span>
+                  <span className="text-slate-400 text-sm">Productos</span>
+                  <span className="text-white font-semibold">{items.length}</span>
                 </div>
                 <div className="flex items-center gap-2 lg:flex lg:justify-between">
-                  <span className="text-slate-400 text-xs sm:text-sm">Total</span>
-                  <span className="text-white font-semibold text-sm sm:text-base">${formatNumber(totales.total)}</span>
+                  <span className="text-slate-400 text-sm">Total</span>
+                  <span className="text-white font-semibold">${formatNumber(totales.total)}</span>
                 </div>
               </div>
             </div>
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full sm:w-auto lg:w-full rounded-2xl bg-green-600 px-5 py-3 text-white font-semibold hover:bg-green-700 transition-colors disabled:bg-slate-700 lg:mt-6 text-sm sm:text-base shadow-lg"
+              className="rounded-2xl bg-green-600 px-6 py-3 text-white font-semibold hover:bg-green-700 transition-colors disabled:bg-slate-700 lg:w-full lg:mt-6"
             >
               {loading ? 'Procesando...' : 'Generar Cotización'}
             </button>
@@ -550,13 +556,5 @@ function CotizarForm() {
         </div>
       )}
     </div>
-  );
-}
-
-export default function CotizarPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Cargando...</div>}>
-      <CotizarForm />
-    </Suspense>
   );
 }
