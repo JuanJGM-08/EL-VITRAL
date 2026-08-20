@@ -257,29 +257,28 @@ export default function CotizarPage() {
 
   if (isLoggedIn === null) {
     return (
-      <div className="min-h-screen bg-slate-950">
-        <div className="max-w-3xl mx-auto mt-20 p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700">
-          <h2 className="text-3xl font-bold text-white text-center mb-4">Cargando tu cotización...</h2>
-          <p className="text-center text-slate-400">Un momento mientras preparamos los productos disponibles.</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0d131f]">
+        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <div className="text-gray-300 font-medium">Cargando tu cotización...</div>
       </div>
     );
   }
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-slate-950">
-        <div className="max-w-3xl mx-auto mt-20 p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700">
-          <h2 className="text-3xl font-bold text-white text-center mb-6">Inicia sesión para cotizar</h2>
-          <div className="bg-amber-900/30 border border-amber-500 p-6 rounded-3xl text-center">
-            <p className="text-lg text-white mb-4">Necesitamos tus datos para crear una cotización personalizada.</p>
-            <button
-              onClick={() => router.push('/login')}
-              className="inline-flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-2xl hover:bg-secondary transition-colors"
-            >
-              Iniciar Sesión
-            </button>
+      <div className="min-h-screen bg-[#0d131f] flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-8 rounded-2xl bg-[#161f30] border border-gray-800 shadow-2xl text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center text-3xl">
+            🔒
           </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Inicia sesión para cotizar</h2>
+          <p className="text-gray-400 text-sm mb-6">Necesitamos tus datos para generar una oferta personalizada de tus productos.</p>
+          <button
+            onClick={() => router.push('/login')}
+            className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg shadow-cyan-950/50 text-sm"
+          >
+            Iniciar Sesión
+          </button>
         </div>
       </div>
     );
@@ -287,127 +286,139 @@ export default function CotizarPage() {
 
   if (resultado) {
     return (
-      <div className="min-h-screen bg-slate-950">
-        <div className="max-w-3xl mx-auto mt-20 p-8 rounded-3xl shadow-2xl bg-slate-900/90 border border-slate-700">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">¡Cotización creada!</h2>
-            <p className="text-slate-300 mb-6">Tu cotización se ha generado correctamente.</p>
-            <div className="inline-flex flex-col items-center justify-center gap-4 rounded-3xl border border-emerald-500/40 bg-emerald-900/20 px-8 py-6">
-              <p className="text-white text-lg">Código de cotización</p>
-              <p className="text-5xl font-extrabold text-primary">{resultado.codigo}</p>
-            </div>
-            <p className="text-slate-400 mt-6">Recuerda llamar al <span className="text-white">3137928483</span> para convertirla en pedido.</p>
-            <button
-              onClick={() => router.push('/catalogo')}
-              className="mt-8 inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl hover:bg-secondary transition-colors"
-            >
-              Seguir explorando
-            </button>
+      <div className="min-h-screen bg-[#0d131f] flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-8 rounded-2xl bg-[#161f30] border border-gray-800 shadow-2xl text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-3xl">
+            ✓
           </div>
+          <h2 className="text-2xl font-bold text-white mb-2">¡Cotización creada!</h2>
+          <p className="text-gray-400 text-xs mb-6">Tu oferta ha sido registrada de manera exitosa en el sistema.</p>
+          
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5 mb-6">
+            <span className="text-xs uppercase tracking-wider text-emerald-400 font-semibold block mb-1">Código de cotización</span>
+            <span className="text-4xl font-extrabold text-white tracking-wider">{resultado.codigo}</span>
+          </div>
+
+          <p className="text-gray-400 text-xs mb-6">
+            Ponte en contacto al <span className="text-cyan-400 font-semibold">3137928483</span> para procesar tu pedido.
+          </p>
+
+          <button
+            onClick={() => router.push('/catalogo')}
+            className="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 px-6 rounded-xl transition-colors border border-gray-700 text-sm"
+          >
+            Seguir explorando
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-32 md:pb-10">
-        <div className="rounded-3xl bg-slate-900/90 border border-slate-800 p-8 shadow-2xl">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
+    <div className="min-h-screen bg-[#0d131f] text-gray-100 py-10 px-4 sm:px-6 lg:px-8 pb-32 lg:pb-10">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-[#161f30] border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8 border-b border-gray-800/80 pb-6">
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-sky-400 mb-3">Cotización rápida</p>
-              <h1 className="text-4xl font-bold text-white">Arma tu cotización en minutos</h1>
-              <p className="mt-4 text-slate-400 max-w-2xl">Selecciona los productos, completa los datos del cliente y genera tu oferta con facilidad.</p>
+              <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400 block mb-1">Cotización rápida</span>
+              <h1 className="text-3xl font-extrabold text-white tracking-tight">Arma tu cotización en minutos</h1>
+              <p className="mt-1 text-sm text-gray-400 max-w-xl">Selecciona tus materiales, especifica las medidas y genera una propuesta formal.</p>
             </div>
-            <div className="rounded-3xl bg-slate-800 border border-slate-700 p-6 shadow-inner">
-              <p className="text-sm text-slate-400">Total estimado</p>
-              <p className="mt-3 text-3xl font-bold text-primary">${formatNumber(totales.total)}</p>
-              <p className="mt-2 text-sm text-slate-500">Los valores se actualizan según los productos agregados.</p>
+            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex items-center justify-between lg:justify-end gap-6">
+              <div>
+                <span className="text-xs text-gray-400 block">Total estimado</span>
+                <span className="text-2xl font-bold text-emerald-400">${formatNumber(totales.total)}</span>
+              </div>
+              <span className="text-xs bg-gray-800 text-gray-300 px-2.5 py-1 rounded-md border border-gray-700">COP</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Datos del cliente */}
-            <div className="lg:col-span-1 rounded-3xl bg-slate-950/90 border border-slate-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Datos del cliente</h2>
-              <div className="space-y-4">
+            <div className="lg:col-span-1 bg-gray-900/40 border border-gray-800/80 rounded-xl p-5">
+              <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                <span>👤</span> Datos del cliente
+              </h2>
+              <div className="space-y-3">
                 <input
                   type="text"
                   placeholder="Nombre completo *"
                   value={cliente.nombre}
                   onChange={(e) => setCliente({...cliente, nombre: e.target.value})}
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="w-full rounded-xl border border-gray-700/80 bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
                 />
                 <input
                   type="email"
                   placeholder="Email *"
                   value={cliente.email}
                   onChange={(e) => setCliente({...cliente, email: e.target.value})}
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="w-full rounded-xl border border-gray-700/80 bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
                 />
                 <input
                   type="tel"
                   placeholder="Teléfono *"
                   value={cliente.telefono}
                   onChange={(e) => setCliente({...cliente, telefono: e.target.value})}
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="w-full rounded-xl border border-gray-700/80 bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
                 />
                 <input
                   type="text"
                   placeholder="Dirección *"
                   value={cliente.direccion}
                   onChange={(e) => setCliente({...cliente, direccion: e.target.value})}
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="w-full rounded-xl border border-gray-700/80 bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
                 />
               </div>
             </div>
 
             {/* Agregar productos y lista */}
-            <div className="lg:col-span-2 rounded-3xl bg-slate-950/90 border border-slate-800 p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-white">Agregar productos</h2>
-                  <p className="text-slate-400">Selecciona el producto y completa las medidas necesarias.</p>
-                </div>
-                <div className="rounded-3xl bg-slate-900/90 border border-slate-700 px-4 py-3 text-sm text-slate-400">
-                  Productos añadidos: <span className="text-white font-semibold">{items.length}</span>
-                </div>
+            <div className="lg:col-span-2 bg-gray-900/40 border border-gray-800/80 rounded-xl p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                  <span>📐</span> Agregar productos
+                </h2>
+                <span className="text-xs bg-gray-800 text-gray-300 px-2.5 py-1 rounded-md border border-gray-700">
+                  {items.length} {items.length === 1 ? 'ítem' : 'ítems'}
+                </span>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <select
                   value={productoActual.producto_id}
                   onChange={(e) => setProductoActual({...productoActual, producto_id: e.target.value})}
-                  className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="rounded-xl border border-gray-700/80 bg-gray-900/80 px-3.5 py-2.5 text-xs text-white focus:border-cyan-500 focus:outline-none"
                 >
                   <option value="">Seleccionar producto</option>
                   {productos.map(p => (
-                    <option key={p.id} value={p.id}>{p.nombre} - Stock: {p.stock}</option>
+                    <option key={p.id} value={p.id}>{p.nombre} (Stock: {p.stock})</option>
                   ))}
                 </select>
-                <div className="rounded-2xl border border-slate-700 bg-slate-950 p-4 text-slate-400">
+
+                <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-2.5 text-xs text-gray-400 flex items-center">
                   {productoActual.producto_id ? (
-                    <p>Seleccionado: <span className="text-white">{productos.find(p => p.id === parseInt(productoActual.producto_id))?.nombre}</span></p>
+                    <span className="text-gray-200 truncate">
+                      Seleccionado: <strong className="text-white">{productos.find(p => p.id === parseInt(productoActual.producto_id))?.nombre}</strong>
+                    </span>
                   ) : (
-                    <p>Selecciona un producto para ver más detalles.</p>
+                    <span>Selecciona un producto para habilitar campos</span>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-3 gap-3 mb-4">
                 <input
                   type="number"
                   placeholder="Largo (cm)"
                   value={productoActual.medida_largo}
                   onChange={(e) => setProductoActual({...productoActual, medida_largo: e.target.value})}
-                  className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="rounded-xl border border-gray-700/80 bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
                 />
                 <input
                   type="number"
                   placeholder="Ancho (cm)"
                   value={productoActual.medida_ancho}
                   onChange={(e) => setProductoActual({...productoActual, medida_ancho: e.target.value})}
-                  className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="rounded-xl border border-gray-700/80 bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
                 />
                 <input
                   type="number"
@@ -422,75 +433,75 @@ export default function CotizarPage() {
                     const producto = productos.find(p => p.id === parseInt(productoActual.producto_id));
                     return producto?.stock || 1;
                   })())})}
-                  className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="rounded-xl border border-gray-700/80 bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
                 />
               </div>
 
               <button
                 onClick={agregarItem}
-                className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-white font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg shadow-cyan-500/30"
+                className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-500 py-2.5 text-xs font-semibold text-white transition-all shadow-md shadow-cyan-950/50"
               >
-                Añadir al presupuesto
+                + Añadir a la Cotización
               </button>
 
-              {/* Lista de productos agregados con edición */}
+              {/* Lista de productos agregados */}
               {items.length > 0 && (
-                <div className="mt-8 rounded-3xl bg-slate-950/90 border border-slate-800 p-6">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-white">Productos seleccionados</h3>
-                    <span className="text-sm text-slate-400">{items.length} ítems</span>
-                  </div>
-                  <div className="space-y-4">
+                <div className="mt-6 pt-5 border-t border-gray-800">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Productos seleccionados</h3>
+                  <div className="space-y-3">
                     {items.map((item, index) => {
                       const mostrarLargo = item.tipo === 'vidrio' || item.tipo === 'espejo' || item.tipo === 'aluminio';
                       const mostrarAncho = item.tipo === 'vidrio' || item.tipo === 'espejo';
                       return (
-                        <div key={index} className="rounded-3xl border border-slate-800 bg-slate-900 p-4 flex flex-col gap-4">
-                          <div className="flex flex-wrap items-start justify-between gap-2">
-                            <p className="font-semibold text-white text-lg">{item.nombre}</p>
+                        <div key={index} className="rounded-xl border border-gray-800 bg-gray-900/90 p-4 flex flex-col gap-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider">{item.tipo}</span>
+                              <p className="font-bold text-white text-sm">{item.nombre}</p>
+                            </div>
                             <button
                               onClick={() => eliminarItem(index)}
-                              className="rounded-full bg-red-500/10 px-3 py-1 text-red-400 hover:bg-red-500/20 text-sm"
+                              className="text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 rounded-md transition-colors"
                             >
                               Eliminar
                             </button>
                           </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 items-end">
                             {mostrarLargo && (
                               <div>
-                                <label className="text-xs text-slate-400 block mb-1">Largo (cm)</label>
+                                <label className="text-[10px] text-gray-400 block mb-1">Largo (cm)</label>
                                 <input
                                   type="number"
                                   value={item.medida_largo || ''}
                                   onChange={(e) => actualizarItem(index, 'medida_largo', parseFloat(e.target.value) || undefined)}
-                                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                                  className="w-full rounded-lg border border-gray-700 bg-gray-950 px-2.5 py-1.5 text-xs text-white focus:border-cyan-500 focus:outline-none"
                                 />
                               </div>
                             )}
                             {mostrarAncho && (
                               <div>
-                                <label className="text-xs text-slate-400 block mb-1">Ancho (cm)</label>
+                                <label className="text-[10px] text-gray-400 block mb-1">Ancho (cm)</label>
                                 <input
                                   type="number"
                                   value={item.medida_ancho || ''}
                                   onChange={(e) => actualizarItem(index, 'medida_ancho', parseFloat(e.target.value) || undefined)}
-                                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                                  className="w-full rounded-lg border border-gray-700 bg-gray-950 px-2.5 py-1.5 text-xs text-white focus:border-cyan-500 focus:outline-none"
                                 />
                               </div>
                             )}
                             <div>
-                              <label className="text-xs text-slate-400 block mb-1">Cantidad</label>
+                              <label className="text-[10px] text-gray-400 block mb-1">Cant.</label>
                               <input
                                 type="number"
                                 min="1"
                                 value={item.cantidad}
                                 onChange={(e) => actualizarItem(index, 'cantidad', parseInt(e.target.value) || 1)}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                                className="w-full rounded-lg border border-gray-700 bg-gray-950 px-2.5 py-1.5 text-xs text-white focus:border-cyan-500 focus:outline-none"
                               />
                             </div>
                             <div>
-                              <label className="text-xs text-slate-400 block mb-1">Precio</label>
-                              <p className="text-lg font-bold text-primary">${formatNumber(item.precio)}</p>
+                              <label className="text-[10px] text-gray-400 block mb-1">Subtotal</label>
+                              <p className="text-sm font-bold text-emerald-400 py-1">${formatNumber(item.precio)}</p>
                             </div>
                           </div>
                         </div>
@@ -498,11 +509,10 @@ export default function CotizarPage() {
                     })}
                   </div>
 
-                  {/* Botón móvil para generar cotización */}
                   <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="mt-6 w-full rounded-2xl bg-green-600 px-4 py-4 text-white font-semibold hover:bg-green-700 transition-colors disabled:bg-slate-700 lg:hidden"
+                    className="mt-4 w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 py-3 text-xs font-semibold text-white transition-colors disabled:opacity-50 lg:hidden shadow-lg shadow-emerald-950/50"
                   >
                     {loading ? 'Procesando...' : 'Generar Cotización'}
                   </button>
@@ -513,27 +523,27 @@ export default function CotizarPage() {
         </div>
       </div>
 
-      {/* Resumen flotante - visible en desktop y móvil */}
+      {/* Resumen flotante */}
       {items.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 border-t border-slate-800 p-4 shadow-2xl lg:bottom-6 lg:left-auto lg:right-6 lg:rounded-3xl lg:border lg:w-80 lg:p-5">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#161f30]/95 backdrop-blur-md border-t border-gray-800 p-4 shadow-2xl lg:bottom-6 lg:left-auto lg:right-6 lg:rounded-2xl lg:border lg:w-80 lg:p-5">
           <div className="flex items-center justify-between lg:block">
             <div className="flex items-center gap-4 lg:block">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400 lg:mb-3">Resumen</p>
-              <div className="flex items-center gap-6 lg:block lg:space-y-3">
-                <div className="flex items-center gap-2 lg:flex lg:justify-between">
-                  <span className="text-slate-400 text-sm">Productos</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block lg:mb-2">Resumen</span>
+              <div className="flex items-center gap-4 lg:block lg:space-y-2">
+                <div className="flex items-center gap-2 lg:justify-between text-xs">
+                  <span className="text-gray-400">Productos:</span>
                   <span className="text-white font-semibold">{items.length}</span>
                 </div>
-                <div className="flex items-center gap-2 lg:flex lg:justify-between">
-                  <span className="text-slate-400 text-sm">Total</span>
-                  <span className="text-white font-semibold">${formatNumber(totales.total)}</span>
+                <div className="flex items-center gap-2 lg:justify-between text-xs">
+                  <span className="text-gray-400">Total:</span>
+                  <span className="text-emerald-400 font-bold text-sm">${formatNumber(totales.total)}</span>
                 </div>
               </div>
             </div>
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="rounded-2xl bg-green-600 px-6 py-3 text-white font-semibold hover:bg-green-700 transition-colors disabled:bg-slate-700 lg:w-full lg:mt-6"
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-xs font-semibold text-white transition-colors disabled:opacity-50 lg:w-full lg:mt-4 shadow-lg shadow-emerald-950/50"
             >
               {loading ? 'Procesando...' : 'Generar Cotización'}
             </button>
@@ -541,16 +551,20 @@ export default function CotizarPage() {
         </div>
       )}
 
+      {/* Modal de Alertas */}
       {showAlertModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
-          <div className="max-w-md w-full rounded-3xl bg-slate-950 border border-slate-700 p-6 shadow-2xl">
-            <h3 className="text-xl font-semibold text-white mb-3">Atención</h3>
-            <p className="text-slate-300 mb-6">{alertMessage || 'Ocurrió un problema, intenta nuevamente.'}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="max-w-sm w-full rounded-2xl bg-[#161f30] border border-gray-800 p-6 shadow-2xl text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl">
+              ⚠️
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Atención</h3>
+            <p className="text-gray-300 text-xs mb-6 leading-relaxed">{alertMessage || 'Ocurrió un problema, intenta nuevamente.'}</p>
             <button
               onClick={() => setShowAlertModal(false)}
-              className="w-full rounded-2xl bg-primary px-5 py-3 text-white font-semibold hover:bg-secondary transition-colors"
+              className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-500 py-2.5 text-xs font-semibold text-white transition-colors"
             >
-              OK
+              Entendido
             </button>
           </div>
         </div>

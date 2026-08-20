@@ -17,6 +17,9 @@ export default function LoginPage() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setError('');
     setSuccess('');
@@ -46,19 +49,14 @@ export default function LoginPage() {
     }
   };
 
-  // Validaciones en cliente
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-
   const validateEmail = (value: string) => {
     if (!value) {
       setEmailError('El correo electrónico es requerido');
       return false;
     }
-    // Regex simple para email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value)) {
-      setEmailError('Ingresa un correo electrónico válido (ej: usuario@dominio.com)');
+      setEmailError('Ingresa un correo electrónico válido');
       return false;
     }
     setEmailError('');
@@ -95,7 +93,6 @@ export default function LoginPage() {
     setError('');
     setSuccess('');
 
-    // Validar antes de enviar
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
     if (!isEmailValid || !isPasswordValid) {
@@ -133,14 +130,11 @@ export default function LoginPage() {
       if (res.ok) {
         setSuccess('Inicio exitoso');
         setTimeout(() => {
-          window.location.href = '/'; // Recarga completa y redirige al home
+          window.location.href = '/';
         }, 1200);
       } else {
-        // Mostrar mensaje de error del servidor
         setError(data.error || 'Error al iniciar sesión');
-        // Resetear captcha para que el usuario tenga que validar nuevamente
         setRecaptchaToken(null);
-        // Si el error es de credenciales, podríamos limpiar la contraseña
         if (data.error && data.error.toLowerCase().includes('contraseña')) {
           setPassword('');
           setPasswordError('');
@@ -154,183 +148,137 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 pointer-events-none"></div>
-
-      <div className="relative sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto h-16 w-16 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
-            <span className="material-symbols-outlined text-2xl text-white">account_circle</span>
+    <div className="min-h-screen bg-[#0d131f] text-gray-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-3xl border border-cyan-500/20 shadow-lg">
+            👤
           </div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-extrabold text-white tracking-tight">
             Bienvenido de vuelta
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-1 text-xs text-gray-400">
             Inicia sesión en tu cuenta para continuar
           </p>
         </div>
 
-
-      </div>
-
-      <div className="relative mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg py-8 px-6 shadow-2xl sm:rounded-2xl sm:px-10 border border-white/20 dark:border-gray-700/50">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="bg-[#161f30] border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-center text-sm">
-                <span className="material-symbols-outlined text-base mr-2 align-middle">error</span>
-                {error}
+              <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-3 rounded-xl text-center text-xs">
+                ⚠️ {error}
               </div>
             )}
             {success && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-xl text-center text-sm">
-                <span className="material-symbols-outlined text-base mr-2 align-middle">check_circle</span>
-                {success}
+              <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-4 py-3 rounded-xl text-center text-xs">
+                ✓ {success}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <span className="material-symbols-outlined text-base mr-2 align-middle">email</span>
+              <label className="block text-xs font-semibold text-gray-300 mb-2">
                 Correo electrónico
               </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={handleEmailChange}
-                  onBlur={() => validateEmail(email)}
-                  className={`w-full pl-4 pr-4 py-3 border rounded-xl shadow-sm
-                    placeholder-gray-400 dark:placeholder-gray-500
-                    focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
-                    sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200
-                    ${emailError ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
-                  placeholder="tu@email.com"
-                />
-              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                onBlur={() => validateEmail(email)}
+                className={`w-full rounded-xl border bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition-colors ${
+                  emailError ? 'border-rose-500' : 'border-gray-700/80'
+                }`}
+                placeholder="tu@email.com"
+              />
               {emailError && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{emailError}</p>
+                <p className="mt-1 text-xs text-rose-400">{emailError}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <span className="material-symbols-outlined text-base mr-2 align-middle">lock</span>
+              <label className="block text-xs font-semibold text-gray-300 mb-2">
                 Contraseña
               </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={password}
-                  onChange={handlePasswordChange}
-                  onBlur={() => validatePassword(password)}
-                  className={`w-full pl-4 pr-4 py-3 border rounded-xl shadow-sm
-                    placeholder-gray-400 dark:placeholder-gray-500
-                    focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
-                    sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200
-                    ${passwordError ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
-                  placeholder="••••••••"
-                />
-              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={handlePasswordChange}
+                onBlur={() => validatePassword(password)}
+                className={`w-full rounded-xl border bg-gray-900/80 px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition-colors ${
+                  passwordError ? 'border-rose-500' : 'border-gray-700/80'
+                }`}
+                placeholder="••••••••"
+              />
               {passwordError && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{passwordError}</p>
+                <p className="mt-1 text-xs text-rose-400">{passwordError}</p>
               )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <div></div>
-              <div className="text-sm">
-                <Link
-                  href="/olvide-password"
-                  className="font-medium text-primary hover:text-secondary transition-colors duration-200"
-                >
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </div>
+            <div className="flex items-center justify-end">
+              <Link
+                href="/olvide-password"
+                className="text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
 
-            <div className="space-y-3">
-              <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <span className="material-symbols-outlined text-base mr-2 align-middle">security</span>
+            <div className="space-y-2">
+              <span className="block text-xs font-semibold text-gray-400">
                 Verificación de seguridad
-              </div>
+              </span>
               {siteKey ? (
-                <div className="flex justify-center bg-white rounded-xl p-4 border border-gray-200">
+                <div className="flex justify-center bg-gray-900/90 rounded-xl p-3 border border-gray-800">
                   <ReCAPTCHA
                     sitekey={siteKey}
                     onChange={(token) => setRecaptchaToken(token)}
+                    theme="dark"
                   />
                 </div>
               ) : (
-                <div className="rounded-xl border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 text-yellow-800 dark:text-yellow-400 text-sm">
-                  <span className="material-symbols-outlined text-base mr-2 align-middle">warning</span>
-                  Captcha no configurado. Añade <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">NEXT_PUBLIC_RECAPTCHA_SITE_KEY</code> en tu archivo de entorno.
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-amber-400 text-xs">
+                  ⚠️ Captcha no configurado.
                 </div>
               )}
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading || !siteKey}
-                className="w-full flex justify-center items-center py-3 px-4 rounded-xl shadow-lg text-sm font-semibold text-white
-                bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
-                disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                {loading ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin mr-2">refresh</span>
-                    Iniciando...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined mr-2">login</span>
-                    Iniciar Sesión
-                  </>
-                )}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading || !siteKey}
+              className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-500 py-3 text-xs font-semibold text-white transition-all shadow-lg shadow-cyan-950/50 disabled:opacity-50"
+            >
+              {loading ? 'Iniciando...' : 'Iniciar Sesión'}
+            </button>
 
-            <div className="text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-center pt-2">
+              <p className="text-xs text-gray-400">
                 ¿No tienes cuenta?{' '}
                 <Link
                   href="/registro"
-                  className="font-semibold text-primary hover:text-secondary transition-colors duration-200"
+                  className="font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
                 >
                   Regístrate aquí
                 </Link>
               </p>
             </div>
 
-            <div className="mt-6 flex flex-col items-center gap-4">
-              <div className="relative w-full flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                </div>
-                <div className="relative bg-white/80 dark:bg-gray-800 px-4 text-sm text-gray-500">
-                  O continúa con
-                </div>
-              </div>
+            <div className="mt-6 pt-4 border-t border-gray-800 flex flex-col items-center gap-4">
+              <span className="text-xs text-gray-500">O continúa con</span>
 
               {googleClientId ? (
                 <GoogleOAuthProvider clientId={googleClientId}>
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => setError('Error al autenticar con Google')}
-                    useOneTap
+                    theme="filled_black"
                   />
                 </GoogleOAuthProvider>
               ) : (
-                <div className="text-xs text-yellow-600">Configura NEXT_PUBLIC_GOOGLE_CLIENT_ID para activar Google Auth</div>
+                <span className="text-xs text-amber-400">Configura Google Auth</span>
               )}
             </div>
           </form>
         </div>
       </div>
     </div>
-
   );
-
 }
