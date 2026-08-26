@@ -78,6 +78,10 @@ export default function PerfilPage() {
                   {user.rol}
                 </span>
               </div>
+              <span className="rounded-full bg-slate-800 px-4 py-2 text-xs sm:text-sm uppercase tracking-[0.2em] text-slate-300">
+                {user.rol}
+              </span>
+            </div>
 
               <div className="mt-8 space-y-3">
                 <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-3.5">

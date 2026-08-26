@@ -48,7 +48,7 @@ const ReviewsCarousel: React.FC = () => {
             <SwiperSlide key={review.id}>
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-lg p-6 h-full flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between gap-4 mb-5">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
                     <div className="flex items-center gap-4">
                       <div className="h-14 w-14 rounded-full overflow-hidden border border-gray-200 dark:border-gray-600">
                         <Image
@@ -77,7 +77,7 @@ const ReviewsCarousel: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-gray-700 dark:text-gray-200 leading-7 mb-6">
-                    "{review.comment}"
+                    &quot;{review.comment}&quot;
                   </p>
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">

@@ -33,12 +33,8 @@ export default function CotizacionesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [loadingDetails, setLoadingDetails] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-
-  useEffect(() => {
-    fetchCotizaciones();
-  }, []);
+  const [mobileActionCotizacion, setMobileActionCotizacion] = useState<Cotizacion | null>(null);
 
   const fetchCotizaciones = async () => {
     try {
@@ -54,12 +50,18 @@ export default function CotizacionesPage() {
     }
   };
 
-  const convertirAPedido = async (cotizacionId: number) => {
+  useEffect(() => {
+    setTimeout(() => fetchCotizaciones(), 0);
+  }, []);
+
+  const convertirAPedido = async (id?: number) => {
+    if (id) {
+      // cotización seleccionada
+    }
     setShowPhoneModal(true);
   };
 
   const verDetalles = async (codigo: string) => {
-    setLoadingDetails(true);
     try {
       const res = await fetch(`/api/cotizaciones/${encodeURIComponent(codigo)}`);
       if (!res.ok) {
@@ -72,8 +74,6 @@ export default function CotizacionesPage() {
     } catch (error) {
       console.error('Error cargando detalles:', error);
       alert('Error al cargar detalles');
-    } finally {
-      setLoadingDetails(false);
     }
   };
 
@@ -313,6 +313,64 @@ export default function CotizacionesPage() {
             >
               Cerrar
             </button>
+          </div>
+        </div>
+      )}
+      {/* Modal de acciones para móvil */}
+      {mobileActionCotizacion && (
+        <div className="fixed inset-0 bg-black/80 flex items-end justify-center z-50 md:hidden p-4">
+          <div className="rounded-2xl shadow-xl w-full mx-auto" style={{ backgroundColor: '#1e2939' }}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Acciones</h2>
+                  <p className="text-gray-400 text-sm">Cotización {mobileActionCotizacion.codigo_unico}</p>
+                </div>
+                <button
+                  onClick={() => setMobileActionCotizacion(null)}
+                  className="text-gray-400 hover:text-gray-200 text-3xl min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <button
+                  onClick={() => {
+                    verDetalles(mobileActionCotizacion.codigo_unico);
+                    setMobileActionCotizacion(null);
+                  }}
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 text-blue-400 bg-blue-900/30 hover:bg-blue-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-blue-800/50"
+                >
+                  <span className="material-symbols-outlined">visibility</span>
+                  Ver Detalles
+                </button>
+
+                <button
+                  onClick={() => {
+                    descargarPdfCotizacion(mobileActionCotizacion.codigo_unico);
+                    setMobileActionCotizacion(null);
+                  }}
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 text-cyan-400 bg-cyan-900/30 hover:bg-cyan-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-cyan-800/50"
+                >
+                  <span className="material-symbols-outlined">picture_as_pdf</span>
+                  Descargar PDF
+                </button>
+
+                {mobileActionCotizacion.estado !== 'convertida' && (
+                  <button
+                    onClick={() => {
+                      convertirAPedido(mobileActionCotizacion.id);
+                      setMobileActionCotizacion(null);
+                    }}
+                    className="w-full min-h-[48px] flex items-center justify-center gap-2 text-primary bg-sky-900/30 hover:bg-sky-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-sky-800/50"
+                  >
+                    <span className="material-symbols-outlined">phone_in_talk</span>
+                    Llama para confirmar
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Link from 'next/link'; // Importar Link
+import Link from 'next/link';
 
 interface Usuario {
   id: number;
@@ -16,10 +16,7 @@ interface Usuario {
 export default function AdminUsuariosPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchUsuarios();
-  }, []);
+  const [mobileActionUsuario, setMobileActionUsuario] = useState<Usuario | null>(null);
 
   const fetchUsuarios = async () => {
     try {
@@ -38,6 +35,10 @@ export default function AdminUsuariosPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setTimeout(() => fetchUsuarios(), 0);
+  }, []);
 
   const aprobarUsuario = async (id: number) => {
     try {
@@ -143,18 +144,29 @@ export default function AdminUsuariosPage() {
                           {usuario.aprobado ? 'Aprobado' : 'Pendiente'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
-                        {!usuario.aprobado && (
-                          <button
-                            onClick={() => aprobarUsuario(usuario.id)}
-                            className="text-green-400 hover:text-green-300"
-                          >
-                            Aprobar
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="hidden md:block space-x-3">
+                          {!usuario.aprobado && (
+                            <button
+                              onClick={() => aprobarUsuario(usuario.id)}
+                              className="text-green-400 hover:text-green-300"
+                            >
+                              Aprobar
+                            </button>
+                          )}
+                          <button className="text-red-400 hover:text-red-300">
+                            Eliminar
                           </button>
-                        )}
-                        <button className="text-red-400 hover:text-red-300">
-                          Eliminar
-                        </button>
+                        </div>
+                        <div className="md:hidden">
+                          <button
+                            onClick={() => setMobileActionUsuario(usuario)}
+                            className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-lg bg-gray-700 hover:bg-gray-600 px-4 py-2 text-white transition-colors border border-gray-600"
+                          >
+                            <span className="material-symbols-outlined text-sm">settings</span>
+                            Acciones
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -164,6 +176,54 @@ export default function AdminUsuariosPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de acciones para móvil */}
+      {mobileActionUsuario && (
+        <div className="fixed inset-0 bg-black/80 flex items-end justify-center z-50 md:hidden p-4">
+          <div className="rounded-2xl shadow-xl w-full mx-auto" style={{ backgroundColor: '#1e2939' }}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Acciones de Usuario</h2>
+                  <p className="text-gray-400 text-sm">{mobileActionUsuario.nombre}</p>
+                </div>
+                <button
+                  onClick={() => setMobileActionUsuario(null)}
+                  className="text-gray-400 hover:text-gray-200 text-3xl min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {!mobileActionUsuario.aprobado && (
+                  <button
+                    onClick={() => {
+                      aprobarUsuario(mobileActionUsuario.id);
+                      setMobileActionUsuario(null);
+                    }}
+                    className="w-full min-h-[48px] flex items-center justify-center gap-2 text-green-400 bg-green-900/30 hover:bg-green-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-green-800/50"
+                  >
+                    <span className="material-symbols-outlined">check_circle</span>
+                    Aprobar Usuario
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => {
+                    // Logic to delete is empty in original file
+                    setMobileActionUsuario(null);
+                  }}
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 text-red-400 bg-red-900/30 hover:bg-red-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-red-800/50"
+                >
+                  <span className="material-symbols-outlined">delete</span>
+                  Eliminar Usuario
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

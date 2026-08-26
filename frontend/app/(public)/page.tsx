@@ -41,6 +41,7 @@ export default function LandingPage() {
             fill
             className="object-cover"
             unoptimized
+            priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0d131f] via-[#0d131f]/70 to-black/60"></div>
         </div>

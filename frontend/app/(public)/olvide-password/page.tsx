@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 px-4 py-12 flex items-center justify-center">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.25),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(129,140,248,0.2),transparent_30%)] pointer-events-none" />
       <div className="relative w-full max-w-md">
-        <div className="rounded-3xl border border-white/10 bg-white/85 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-3xl border border-white/10 bg-white/85 p-5 sm:p-8 shadow-2xl backdrop-blur-xl">
           <div className="text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-primary to-secondary text-white shadow-lg">
               <span className="material-symbols-outlined text-2xl">lock_reset</span>
