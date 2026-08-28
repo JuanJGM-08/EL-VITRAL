@@ -1902,10 +1902,6 @@ async function handleRequest(req, res) {
       if (!userData) {
         return sendJSON(res, 401, { error: 'No autorizado' });
       }
-      if (isAdmin(userData)) {
-        const rows = await query('SELECT * FROM cotizaciones ORDER BY fecha_cotizacion DESC');
-        return sendJSON(res, 200, Array.isArray(rows) ? rows.map(formatNumericRow) : []);
-      }
       const rows = await query('SELECT * FROM cotizaciones WHERE usuario_id = ? ORDER BY fecha_cotizacion DESC', [userData.id]);
       return sendJSON(res, 200, Array.isArray(rows) ? rows.map(formatNumericRow) : []);
     }

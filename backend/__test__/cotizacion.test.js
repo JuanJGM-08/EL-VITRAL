@@ -100,6 +100,20 @@ describe('Cotizacion - POST /api/cotizaciones', () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  test('lista únicamente las cotizaciones propias cuando el usuario es administrador', async () => {
+    getUserFromRequest.mockReturnValue({ id: 'admin-1', rol: 'admin' });
+    query.mockResolvedValueOnce([{ id: 7, usuario_id: 'admin-1', total: 125000 }]);
+
+    const res = await request(app).get('/api/cotizaciones');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(query).toHaveBeenCalledWith(
+      'SELECT * FROM cotizaciones WHERE usuario_id = ? ORDER BY fecha_cotizacion DESC',
+      ['admin-1'],
+    );
+  });
+
   test('rechaza cliente incompleto', async () => {
     getUserFromRequest.mockReturnValue({ id: 1, rol: 'usuario' });
 
