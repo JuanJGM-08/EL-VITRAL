@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
@@ -25,6 +26,71 @@ function sanitizeEmail(value) {
 }
 
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key';
+
+// ============================================================================
+// Sesiones opacas en servidor
+// ----------------------------------------------------------------------------
+// El JWT NUNCA se envía al navegador. En el navegador solo hay una cookie
+// "sid" opaca (un identificador aleatorio sin significado). El mapeo sid ->
+// usuario/token vive únicamente en el servidor, por lo que aunque se
+// inspeccionen las cookies del navegador no se puede ver ningún token.
+// ============================================================================
+
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días (sliding expiration)
+const sessions = new Map();
+
+function randomSid() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+/**
+ * Crea una sesión opaca para un usuario.
+ * @param {{ id: string, rol: string, nombre?: string, email?: string }} user
+ * @returns {{ sid: string, session: object }}
+ */
+function createSession(user) {
+  const sid = randomSid();
+  const accessToken = generateAccessToken({
+    id: user.id,
+    rol: user.rol,
+    nombre: user.nombre,
+    email: user.email,
+  });
+  const session = {
+    sid,
+    userId: user.id,
+    rol: user.rol,
+    nombre: user.nombre,
+    email: user.email,
+    accessToken,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + SESSION_TTL_MS,
+  };
+  sessions.set(sid, session);
+  return { sid, session };
+}
+
+function touchSession(session) {
+  session.expiresAt = Date.now() + SESSION_TTL_MS;
+}
+
+function getSession(sid) {
+  if (!sid) return null;
+  const session = sessions.get(sid);
+  if (!session) return null;
+  if (Date.now() > session.expiresAt) {
+    sessions.delete(sid);
+    return null;
+  }
+  // Sliding expiration: cada uso válido renueva la sesión.
+  touchSession(session);
+  return session;
+}
+
+function deleteSession(sid) {
+  if (!sid) return;
+  sessions.delete(sid);
+}
 
 function generateAccessToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
@@ -78,17 +144,36 @@ function extractBearerToken(req) {
 }
 
 function getUserFromRequest(req) {
-  // 1. Intentar con Bearer Token (HEADER)
+  // 1. Cookie de sesión opaca (producción / navegador)
+  let user = null;
+  try {
+    const cookies = parseCookies(req.headers.cookie || '');
+    const session = getSession(cookies.sid);
+    if (session) {
+      // El token vive en el servidor; aquí solo se verifica que siga siendo
+      // válido para devolver los datos del usuario.
+      user = verifyAccessToken(session.accessToken);
+      if (!user) {
+        // El token interno expiró pero la sesión sigue viva: regenerar el JWT
+        // en el servidor sin intervención del navegador.
+        session.accessToken = generateAccessToken({
+          id: session.userId,
+          rol: session.rol,
+          nombre: session.nombre,
+          email: session.email,
+        });
+        user = verifyAccessToken(session.accessToken);
+      }
+    }
+  } catch (e) {
+    user = null;
+  }
+  if (user) return user;
+
+  // 2. Fallback: Bearer Token (solo para Swagger / integraciones externas)
   const tokenFromBearer = extractBearerToken(req);
   if (tokenFromBearer) {
     const decoded = verifyAccessToken(tokenFromBearer);
-    if (decoded) return decoded;
-  }
-
-  const cookies = parseCookies(req.headers.cookie || '');
-  const tokenFromCookie = cookies.accessToken || cookies.token;
-  if (tokenFromCookie) {
-    const decoded = verifyAccessToken(tokenFromCookie);
     if (decoded) return decoded;
   }
 
@@ -132,4 +217,7 @@ module.exports = {
   requireAdmin,
   parseCookies,
   extractBearerToken,
+  createSession,
+  getSession,
+  deleteSession,
 };

@@ -31,6 +31,9 @@ const {
   requireAdmin,
   verifyAccessToken,
   verifyRefreshToken,
+  createSession,
+  getSession,
+  deleteSession,
 } = require('./lib/auth.js');
 const { createPasswordResetToken, sendPasswordResetEmail } = require('./lib/email.js');
 const { notifyOrderCreated, notifyOrderStateChange, notifyAppointment, notifyStockMovement, notifyPaymentReceived } = require('./lib/notifications.js');
@@ -901,35 +904,48 @@ async function parseBody(req) {
   });
 }
 
-function createCookies(accessToken, refreshToken) {
-  const isProd = isProduction;
-  const accessParts = [`accessToken=${accessToken}`, 'Path=/', `Max-Age=${15 * 60}`, 'SameSite=Lax'];
-  const refreshParts = [`token=${refreshToken}`, 'Path=/', `Max-Age=${60 * 60 * 24 * 7}`, 'SameSite=Lax'];
+// La cookie únicamente contiene un identificador de sesión opaco (sid).
+// El token real (JWT) se guarda exclusivamente en el servidor, de modo que
+// aunque se inspeccionen las cookies del navegador no hay ningún token visible.
+//
+// Para eliminar restos de versiones anteriores, también se expiran las
+// cookies viejas "accessToken" y "token" que pudieran haber quedado guardadas
+// en el navegador en sesiones previas.
+function expiredCookie(name) {
+  const parts = [`${name}=; Path=/`, 'Expires=Thu, 01 Jan 1970 00:00:00 GMT', 'SameSite=Lax'];
+  if (isProduction) {
+    parts.push('Secure');
+  }
+  return parts.join('; ');
+}
 
-  if (isProd) {
-    accessParts.push('Secure');
-    refreshParts.push('Secure');
+function createSessionCookies(sid) {
+  // Limpia las cookies viejas con token y establece la nueva cookie opaca.
+  return [
+    expiredCookie('accessToken'),
+    expiredCookie('token'),
+    createCookie(sid),
+  ];
+}
+
+function createCookie(sid) {
+  const parts = [`sid=${sid}`, 'Path=/', 'SameSite=Lax'];
+
+  if (isProduction) {
+    parts.push('Secure');
   }
 
-  accessParts.push('HttpOnly');
-  refreshParts.push('HttpOnly');
+  parts.push('HttpOnly');
 
-  return [accessParts.join('; '), refreshParts.join('; ')];
+  return parts.join('; ');
 }
 
 function clearCookies() {
-  const accessParts = ['accessToken=; Path=/', 'Expires=Thu, 01 Jan 1970 00:00:00 GMT', 'SameSite=Lax'];
-  const refreshParts = ['token=; Path=/', 'Expires=Thu, 01 Jan 1970 00:00:00 GMT', 'SameSite=Lax'];
-
-  if (isProduction) {
-    accessParts.push('Secure');
-    refreshParts.push('Secure');
-  }
-
-  accessParts.push('HttpOnly');
-  refreshParts.push('HttpOnly');
-
-  return [accessParts.join('; '), refreshParts.join('; ')];
+  return [
+    expiredCookie('accessToken'),
+    expiredCookie('token'),
+    expiredCookie('sid'),
+  ];
 }
 
 function generateUniqueCode() {
@@ -1081,6 +1097,15 @@ async function handleRequest(req, res) {
         return sendJSON(res, 400, { error: 'Nombre, email y contraseña son obligatorios' });
       }
 
+      const domain = email.split('@')[1];
+      try {
+        const mxRecords = await require('dns').promises.resolveMx(domain);
+        if (!mxRecords || mxRecords.length === 0) {
+           return sendJSON(res, 400, { error: 'El dominio del correo no es válido (no recibe correos)' });
+        }
+      } catch (err) {
+        return sendJSON(res, 400, { error: 'El dominio del correo no existe o no es válido' });
+      }
       const existing = await query('SELECT id FROM usuarios WHERE email = ?', [email]);
       if (Array.isArray(existing) && existing.length > 0) {
         return sendJSON(res, 409, { error: 'El correo ya está registrado' });
@@ -1125,15 +1150,13 @@ async function handleRequest(req, res) {
         return sendJSON(res, 403, { error: 'Cuenta en espera de aprobación' });
       }
 
-      const accessToken = generateAccessToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
-      const refreshToken = generateRefreshToken({ id: user.id });
-      const cookies = createCookies(accessToken, refreshToken);
-      res.setHeader('Set-Cookie', cookies);
+      const { sid } = createSession({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
+      res.setHeader('Set-Cookie', createSessionCookies(sid));
 
-      // 🔥 DEVOLVER EL TOKEN PARA BEARER AUTH
+      // NOTA: El token NUNCA se devuelve al frontend. Solo se envía un sid opaco
+      // en una cookie HttpOnly; el JWT queda únicamente en el servidor.
       return sendJSON(res, 200, {
         message: 'Inicio de sesion exitoso',
-        token: accessToken,
         user: {
           id: user.id,
           nombre: user.nombre,
@@ -1185,14 +1208,11 @@ async function handleRequest(req, res) {
           return sendJSON(res, 403, { error: 'Cuenta en espera de aprobación' });
         }
 
-        const accessToken = generateAccessToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
-        const refreshToken = generateRefreshToken({ id: user.id });
-        const cookies = createCookies(accessToken, refreshToken);
-        res.setHeader('Set-Cookie', cookies);
+        const { sid } = createSession({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
+        res.setHeader('Set-Cookie', createSessionCookies(sid));
 
         return sendJSON(res, 200, {
           message: 'Inicio de sesion exitoso con Google',
-          token: accessToken,
           user: {
             id: user.id,
             nombre: user.nombre,
@@ -1287,25 +1307,28 @@ async function handleRequest(req, res) {
 
     // ===== LOGOUT =====
     if (pathname === '/api/auth/logout' && method === 'POST') {
+      const cookies = parseCookies(req.headers.cookie || '');
+      if (cookies.sid) {
+        deleteSession(cookies.sid);
+      }
       res.setHeader('Set-Cookie', clearCookies());
       return sendJSON(res, 200, { message: 'Sesión cerrada' });
     }
 
-    // ===== REFRESH TOKEN =====
+    // ===== REFRESH (renovar sesión opaca) =====
+    // La sesión vive en el servidor y se renueva de forma implícita (sliding
+    // expiration) con cada petición autenticada. Este endpoint simplemente
+    // reemite la cookie para mantenerla al día y devuelve el usuario.
     if (pathname === '/api/auth/refresh' && method === 'POST') {
       const cookies = parseCookies(req.headers.cookie || '');
-      const token = cookies.token;
-      if (!token) {
-        return sendJSON(res, 401, { error: 'No refresh token provided' });
+      const session = getSession(cookies.sid);
+      if (!session) {
+        return sendJSON(res, 401, { error: 'No session found' });
       }
 
-      const decoded = verifyRefreshToken(token);
-      if (!decoded) {
-        return sendJSON(res, 401, { error: 'Invalid or expired refresh token' });
-      }
-
-      const userRows = await query('SELECT id, rol, nombre, email, activo, aprobado FROM usuarios WHERE id = ?', [decoded.id]);
+      const userRows = await query('SELECT id, rol, nombre, email, activo, aprobado FROM usuarios WHERE id = ?', [session.userId]);
       if (!Array.isArray(userRows) || userRows.length === 0) {
+        deleteSession(cookies.sid);
         return sendJSON(res, 401, { error: 'Usuario no encontrado' });
       }
 
@@ -1313,15 +1336,29 @@ async function handleRequest(req, res) {
       if (!user.activo) return sendJSON(res, 403, { error: 'Cuenta inactiva' });
       if (!user.aprobado) return sendJSON(res, 403, { error: 'Cuenta en espera de aprobación' });
 
-      const accessToken = generateAccessToken({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
-      const refreshToken = generateRefreshToken({ id: user.id });
-      const newCookies = createCookies(accessToken, refreshToken);
-      res.setHeader('Set-Cookie', newCookies);
+      // Recrear sesión para rotar el sid y el token interno.
+      deleteSession(cookies.sid);
+      const { sid } = createSession({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
+      res.setHeader('Set-Cookie', createSessionCookies(sid));
 
       return sendJSON(res, 200, {
-        message: 'Token refrescado correctamente',
-        token: accessToken,
+        message: 'Sesión renovada correctamente',
+        user: {
+          id: user.id,
+          nombre: user.nombre,
+          email: user.email,
+          rol: user.rol
+        }
       });
+    }
+
+    // ===== SESSION CHECK (para middleware del frontend) =====
+    if (pathname === '/api/auth/session' && method === 'GET') {
+      const userData = getUserFromRequest(req);
+      if (!userData) {
+        return sendJSON(res, 401, { error: 'No sesión activa' });
+      }
+      return sendJSON(res, 200, { authenticated: true, rol: userData.rol });
     }
 
     // ===== GET ME =====

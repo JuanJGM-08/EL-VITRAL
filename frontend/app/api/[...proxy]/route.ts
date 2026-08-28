@@ -4,35 +4,25 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
 
 const EXCLUDED_HEADERS = ['connection', 'host', 'content-length'];
 
+// La cookie del navegador contiene únicamente un identificador de sesión
+// opaco ("sid") sin tokens. Por eso aquí no hay cifrado: no hay nada secreto
+// en el navegador. El backend reenvía la cookie tal cual (HttpOnly) y es la
+// fuente de verdad de la autenticación.
+
 function getSetCookies(response: Response): string[] {
   const headers = response.headers as Headers & { getSetCookie?: () => string[] };
   const cookies = headers.getSetCookie?.();
   if (cookies?.length) return cookies;
 
   const cookie = response.headers.get('set-cookie');
-  return cookie ? [cookie] : [];
-}
-
-function getCookieValue(cookies: string[], name: string): string | null {
-  const prefix = `${name}=`;
-  const cookie = cookies.find((value) => value.startsWith(prefix));
-  return cookie ? cookie.slice(prefix.length).split(';', 1)[0] : null;
-}
-
-function replaceCookie(cookieHeader: string, name: string, value: string): string {
-  const cookies = cookieHeader
-    .split(';')
-    .map((cookie) => cookie.trim())
-    .filter((cookie) => cookie && !cookie.startsWith(`${name}=`));
-
-  cookies.push(`${name}=${value}`);
-  return cookies.join('; ');
+  if (cookie) return [cookie];
+  return [];
 }
 
 export async function handler(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   const searchParams = req.nextUrl.searchParams;
-  
+
   // Extract /api/{path*} and rebuild URL to backend
   const pathMatch = pathname.match(/^\/api\/(.*)$/);
   if (!pathMatch) {
@@ -41,7 +31,7 @@ export async function handler(req: NextRequest) {
 
   const apiPath = pathMatch[1];
   const backendUrl = new URL(`${BACKEND_URL}/api/${apiPath}`);
-  
+
   // Preserve query parameters
   searchParams.forEach((value, key) => {
     backendUrl.searchParams.append(key, value);
@@ -50,26 +40,27 @@ export async function handler(req: NextRequest) {
   // Prepare request body
   let body: BodyInit | undefined;
   const contentType = req.headers.get('content-type');
-  
+
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     if (contentType?.includes('application/json')) {
       body = await req.text();
-    } else if (contentType?.includes('application/x-www-form-urlencoded') || 
-               contentType?.includes('multipart/form-data')) {
+    } else if (
+      contentType?.includes('application/x-www-form-urlencoded') ||
+      contentType?.includes('multipart/form-data')
+    ) {
       body = await req.arrayBuffer();
     } else {
       body = await req.text();
     }
   }
 
-  // Forward request headers
+  // Forward request headers (cookie incluída tal cual)
   const headers = new Headers();
   req.headers.forEach((value, key) => {
     if (!EXCLUDED_HEADERS.includes(key.toLowerCase())) {
       headers.set(key, value);
     }
   });
-  // Ensure content-type is set
   if (contentType) {
     headers.set('content-type', contentType);
   }
@@ -82,10 +73,10 @@ export async function handler(req: NextRequest) {
       credentials: 'include',
     });
 
-    // El access token dura 15 minutos. Si ya expiró pero el refresh token sigue
-    // vigente, renueva la sesión y repite la petición original de forma transparente.
+    // Si la sesión expiró (401), intenta renovarla con el endpoint refresh y
+    // repite la petición original de forma transparente.
     let refreshedCookies: string[] = [];
-    if (response.status === 401 && !['auth/login', 'auth/google', 'auth/refresh'].includes(apiPath)) {
+    if (response.status === 401 && !['auth/login', 'auth/google', 'auth/refresh', 'auth/session'].includes(apiPath)) {
       const refreshResponse = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
         method: 'POST',
         headers: { cookie: req.headers.get('cookie') || '' },
@@ -94,15 +85,12 @@ export async function handler(req: NextRequest) {
 
       if (refreshResponse.ok) {
         refreshedCookies = getSetCookies(refreshResponse);
-        const accessToken = getCookieValue(refreshedCookies, 'accessToken');
-
-        if (accessToken) {
+        const sid = refreshedCookies
+          .map((cookie) => cookie.split(';')[0])
+          .find((cookie) => cookie.startsWith('sid='));
+        if (sid) {
           const retryHeaders = new Headers(headers);
-          retryHeaders.set(
-            'cookie',
-            replaceCookie(req.headers.get('cookie') || '', 'accessToken', accessToken)
-          );
-
+          retryHeaders.set('cookie', sid);
           response = await fetch(backendUrl.toString(), {
             method: req.method,
             headers: retryHeaders,
@@ -117,8 +105,12 @@ export async function handler(req: NextRequest) {
     const responseBody = await response.arrayBuffer();
     const responseHeaders = new Headers(response.headers);
 
-    refreshedCookies.forEach((cookie) => responseHeaders.append('set-cookie', cookie));
-    
+    // Reenviar las cookies (sid) que devuelva el backend tal cual, incluidas
+    // las del refresh, de modo que el navegador conserve la sesión.
+    refreshedCookies.forEach((cookie) => {
+      responseHeaders.append('set-cookie', cookie);
+    });
+
     // Allow CORS
     responseHeaders.set('Access-Control-Allow-Origin', '*');
     responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');

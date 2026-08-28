@@ -14,6 +14,11 @@ jest.mock('../lib/auth.js', () => ({
   getUserFromRequest: jest.fn(),
   isAdmin: jest.fn((user) => user?.rol === 'admin'),
   verifyToken: jest.fn(),
+  verifyAccessToken: jest.fn(),
+  verifyRefreshToken: jest.fn(),
+  createSession: jest.fn(() => ({ sid: 'fake-sid', session: {} })),
+  deleteSession: jest.fn(),
+  getSession: jest.fn(),
 }));
 
 const { query } = require('../lib/db.js');
@@ -21,6 +26,7 @@ const {
   comparePassword,
   generateAccessToken,
   generateRefreshToken,
+  createSession,
   sanitizeEmail,
 } = require('../lib/auth.js');
 
@@ -56,15 +62,15 @@ describe('Login - POST /api/auth/login', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBeDefined();
 
-    expect(generateAccessToken).toHaveBeenCalledWith({
+    expect(createSession).toHaveBeenCalledWith({
       id: 1,
       rol: 'usuario',
       nombre: 'Juan Perez',
       email: 'juan@test.com',
     });
-    expect(generateRefreshToken).toHaveBeenCalledWith({ id: 1 });
 
     expect(res.headers['set-cookie']).toBeDefined();
+    expect(res.body.token).toBeUndefined();
   });
 
   test('rechaza login con password incorrecto', async () => {
