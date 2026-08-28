@@ -77,6 +77,30 @@ describe('Pedidos', () => {
     expect(res.status).toBe(403);
   });
 
+  test('permite responder una encuesta al usuario dueño de un pedido con UUID', async () => {
+    const usuarioId = '95f90fbd-1bb9-4214-af3b-67b982b5b291';
+    getUserFromRequest.mockReturnValue({ id: usuarioId, rol: 'usuario' });
+
+    query
+      .mockResolvedValueOnce([{ id: 23, usuario_id: usuarioId, estado: 'entregado' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({ insertId: 14 });
+
+    const res = await request(app)
+      .post('/api/encuestas')
+      .send({ pedido_id: 23, calificacion: 5, comentario: 'Excelente servicio' });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({
+      message: 'Encuesta registrada correctamente',
+      id: 14,
+    });
+    expect(query).toHaveBeenLastCalledWith(
+      'INSERT INTO encuestas_satisfaccion (pedido_id, usuario_id, calificacion, comentario) VALUES (?, ?, ?, ?)',
+      [23, usuarioId, 5, 'Excelente servicio']
+    );
+  });
+
   // ==========================
   // NUEVO TEST
   // ==========================

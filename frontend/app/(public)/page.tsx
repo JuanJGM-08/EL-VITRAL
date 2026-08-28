@@ -1,9 +1,9 @@
 'use client';
 import React, { useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import ReviewsCarousel from '@/components/ReviewsCarousel';
 import LocationSection from '@/components/LocationSection';
+import FeaturedProjectsCarousel from '@/components/FeaturedProjectsCarousel';
 import { useRouter } from 'next/navigation';
 
 export default function LandingPage() {
@@ -105,118 +105,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Proyectos Destacados */}
-      <section className="py-20 bg-[#0d131f]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className="text-xs font-bold text-cyan-400 tracking-wider uppercase block mb-2">Portafolio</span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
-              Proyectos destacados
-            </h2>
-            <p className="text-gray-400 text-sm max-w-xl mx-auto">
-              Descubre nuestros últimos trabajos en cristalería e instalaciones a medida.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Proyecto 1 */}
-            <Link 
-              href="/proyectos/fachada-comercial" 
-              className="bg-[#161f30] rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all duration-300 shadow-xl group flex flex-col justify-between"
-            >
-              <div>
-                <div className="h-60 overflow-hidden relative">
-                  <Image
-                    src="https://vidriostemplex.com/wp-content/uploads/2022/06/PHOTO-2021-11-26-11-01-21-1536x1152.jpg"
-                    alt="Fachada de Vidrio Comercial"
-                    width={400}
-                    height={256}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#161f30] via-transparent to-transparent opacity-80"></div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">
-                    Fachada Comercial
-                  </h3>
-                  <p className="text-gray-400 text-xs leading-relaxed">
-                    Instalación de vidrio templado de alta resistencia para centro comercial.
-                  </p>
-                </div>
-              </div>
-              <div className="px-6 pb-6 pt-2 flex items-center text-cyan-400 font-semibold text-xs group-hover:translate-x-1 transition-transform">
-                <span>Ver detalles</span>
-                <span className="ml-1 text-sm">→</span>
-              </div>
-            </Link>
-
-            {/* Proyecto 2 */}
-            <Link 
-              href="/proyectos/divisiones-corporativas" 
-              className="bg-[#161f30] rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all duration-300 shadow-xl group flex flex-col justify-between"
-            >
-              <div>
-                <div className="h-60 overflow-hidden relative">
-                  <Image
-                    src="https://th.bing.com/th/id/R.e021e394864a3ee46e884b5f8c597845?rik=zkzo18kF9sPPNA&pid=ImgRaw&r=0"
-                    alt="Divisiones de Oficina de Vidrio"
-                    width={400}
-                    height={256}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#161f30] via-transparent to-transparent opacity-80"></div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">
-                    Divisiones Corporativas
-                  </h3>
-                  <p className="text-gray-400 text-xs leading-relaxed">
-                    Separadores de ambiente en vidrio laminado acústico para oficinas modernas.
-                  </p>
-                </div>
-              </div>
-              <div className="px-6 pb-6 pt-2 flex items-center text-cyan-400 font-semibold text-xs group-hover:translate-x-1 transition-transform">
-                <span>Ver detalles</span>
-                <span className="ml-1 text-sm">→</span>
-              </div>
-            </Link>
-
-            {/* Proyecto 3 */}
-            <Link 
-              href="/proyectos/barandas-residenciales" 
-              className="bg-[#161f30] rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all duration-300 shadow-xl group flex flex-col justify-between"
-            >
-              <div>
-                <div className="h-60 overflow-hidden relative">
-                  <Image
-                    src="https://lucor.es/wp-content/uploads/2023/01/barandillas-de-vidrio-view-crystal-03.jpg"
-                    alt="Barandas de vidrio Residencial"
-                    width={400}
-                    height={256}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#161f30] via-transparent to-transparent opacity-80"></div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">
-                    Barandas Residenciales
-                  </h3>
-                  <p className="text-gray-400 text-xs leading-relaxed">
-                    Diseño e instalación de barandas de cristal templado para balcones y terrazas.
-                  </p>
-                </div>
-              </div>
-              <div className="px-6 pb-6 pt-2 flex items-center text-cyan-400 font-semibold text-xs group-hover:translate-x-1 transition-transform">
-                <span>Ver detalles</span>
-                <span className="ml-1 text-sm">→</span>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <FeaturedProjectsCarousel />
 
       {/* Reseñas y Ubicación */}
       <ReviewsCarousel />

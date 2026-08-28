@@ -5,9 +5,30 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { reviews, defaultAvatar } from '@/lib/config';
+import { defaultAvatar } from '@/lib/config';
+
+interface Review {
+  id: number;
+  nombre: string;
+  calificacion: number;
+  comentario: string | null;
+  fecha_respuesta: string;
+}
 
 const ReviewsCarousel: React.FC = () => {
+  const [reviews, setReviews] = React.useState<Review[]>([]);
+
+  React.useEffect(() => {
+    fetch('/api/encuestas/destacadas')
+      .then((response) => response.ok ? response.json() : [])
+      .then((data) => setReviews(Array.isArray(data) ? data : []))
+      .catch(() => setReviews([]));
+  }, []);
+
+  const formatDate = (date: string) => new Intl.DateTimeFormat('es-CO', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  }).format(new Date(date));
+
   return (
     <section className="py-20 bg-white dark:bg-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -16,11 +37,11 @@ const ReviewsCarousel: React.FC = () => {
             Lo que dicen nuestros clientes
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Reseñas estilo Google Maps con datos estáticos configurables.
+            Opiniones de clientes que calificaron su experiencia con 5 estrellas.
           </p>
         </div>
 
-        <Swiper
+        {reviews.length > 0 ? <Swiper
           modules={[Autoplay, Pagination]}
           spaceBetween={30}
           slidesPerView={1}
@@ -52,8 +73,8 @@ const ReviewsCarousel: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <div className="h-14 w-14 rounded-full overflow-hidden border border-gray-200 dark:border-gray-600">
                         <Image
-                          src={review.avatar || defaultAvatar}
-                          alt={`Foto de perfil de ${review.name}`}
+                          src={defaultAvatar}
+                          alt={`Avatar de ${review.nombre}`}
                           width={56}
                           height={56}
                           className="object-cover"
@@ -62,34 +83,36 @@ const ReviewsCarousel: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {review.name}
+                          {review.nombre}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {review.source}
+                          Cliente verificado
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-full">
                       <span className="material-symbols-outlined text-yellow-400">star</span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {review.rating}.0
+                        {review.calificacion}.0
                       </span>
                     </div>
                   </div>
                   <p className="text-gray-700 dark:text-gray-200 leading-7 mb-6">
-                    "{review.comment}"
+                    &quot;{review.comentario || 'Sin comentario adicional.'}&quot;
                   </p>
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                  <span>{review.timeAgo}</span>
+                  <span>{formatDate(review.fecha_respuesta)}</span>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    {review.source}
+                    Encuesta de satisfacción
                   </span>
                 </div>
               </div>
             </SwiperSlide>
           ))}
-        </Swiper>
+        </Swiper> : (
+          <p className="text-center text-gray-500 dark:text-gray-400">Aún no hay reseñas para mostrar.</p>
+        )}
       </div>
     </section>
   );

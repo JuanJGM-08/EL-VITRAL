@@ -1,5 +1,5 @@
 'use client';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ReCAPTCHA from 'react-google-recaptcha';
@@ -19,6 +19,12 @@ export default function LoginPage() {
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  const resetRecaptcha = () => {
+    recaptchaRef.current?.reset();
+    setRecaptchaToken(null);
+  };
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setError('');
@@ -134,7 +140,7 @@ export default function LoginPage() {
         }, 1200);
       } else {
         setError(data.error || 'Error al iniciar sesión');
-        setRecaptchaToken(null);
+        resetRecaptcha();
         if (data.error && data.error.toLowerCase().includes('contraseña')) {
           setPassword('');
           setPasswordError('');
@@ -142,6 +148,7 @@ export default function LoginPage() {
       }
     } catch {
       setError('Error de conexión. Verifica tu conexión a internet.');
+      resetRecaptcha();
     } finally {
       setLoading(false);
     }
@@ -229,8 +236,14 @@ export default function LoginPage() {
               {siteKey ? (
                 <div className="flex justify-center bg-gray-900/90 rounded-xl p-3 border border-gray-800">
                   <ReCAPTCHA
+                    ref={recaptchaRef}
                     sitekey={siteKey}
                     onChange={(token) => setRecaptchaToken(token)}
+                    onExpired={resetRecaptcha}
+                    onErrored={() => {
+                      resetRecaptcha();
+                      setError('No fue posible validar el captcha. Inténtalo nuevamente.');
+                    }}
                     theme="dark"
                   />
                 </div>

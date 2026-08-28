@@ -33,3 +33,8 @@ JOIN cotizaciones c ON c.id = p.cotizacion_id
 JOIN usuarios u ON u.email = c.email_cliente
 SET p.usuario_id = u.id
 WHERE c.usuario_id IS NULL;
+
+INSERT INTO proyectos_destacados (titulo, slug, resumen, descripcion, imagen_url, tecnologias, orden, activo) VALUES
+('Fachada Comercial', 'fachada-comercial', 'Instalación de vidrio templado de alta resistencia para centro comercial.', 'Este proyecto consistió en la instalación de una fachada completa de vidrio templado de 12 mm, con estructura de aluminio anodizado. El diseño aporta transparencia y eficiencia energética.', 'https://vidriostemplex.com/wp-content/uploads/2022/06/PHOTO-2021-11-26-11-01-21-1536x1152.jpg', 'Vidrio templado, Aluminio anodizado, Sellado estructural', 1, 1),
+('Divisiones Corporativas', 'divisiones-corporativas', 'Separadores de ambiente en vidrio laminado acústico para oficinas modernas.', 'Instalación de divisiones modulares en vidrio laminado con cámara acústica para un entorno moderno, funcional y con excelente aislamiento sonoro.', 'https://th.bing.com/th/id/R.e021e394864a3ee46e884b5f8c597845?rik=zkzo18kF9sPPNA&pid=ImgRaw&r=0', 'Vidrio laminado, Perfiles de aluminio, Fijaciones invisibles', 2, 1),
+('Barandas Residenciales', 'barandas-residenciales', 'Diseño e instalación de barandas de cristal templado para balcones y terrazas.', 'Barandas de vidrio templado sin perfiles, fijadas con sistemas ocultos que combinan seguridad y elegancia en exteriores.', 'https://lucor.es/wp-content/uploads/2023/01/barandillas-de-vidrio-view-crystal-03.jpg', 'Vidrio templado, Sujeción invisible, Acero inoxidable', 3, 1);

@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import { businessLocation } from '@/lib/config';
 
 const containerStyle = {
@@ -12,6 +12,49 @@ const center = {
   lat: businessLocation.lat,
   lng: businessLocation.lng,
 };
+
+const mapLoaderId = 'el-vitral-google-maps';
+
+function LocationMap() {
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: mapLoaderId,
+    googleMapsApiKey: businessLocation.googleMapsApiKey,
+  });
+
+  if (loadError) {
+    return (
+      <MapMessage message="No fue posible cargar el mapa. Verifica la configuración de Google Maps." />
+    );
+  }
+
+  if (!isLoaded) {
+    return <MapMessage message="Cargando mapa..." />;
+  }
+
+  return (
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={center}
+      zoom={15}
+      options={{
+        zoomControl: true,
+        streetViewControl: false,
+        mapTypeControl: false,
+        fullscreenControl: false,
+      }}
+    >
+      <Marker position={center} />
+    </GoogleMap>
+  );
+}
+
+function MapMessage({ message }: { message: string }) {
+  return (
+    <div className="flex h-96 w-full items-center justify-center bg-gray-200 px-6 text-center dark:bg-gray-700">
+      <p className="text-gray-500 dark:text-gray-400">{message}</p>
+    </div>
+  );
+}
 
 const LocationSection: React.FC = () => {
   return (
@@ -77,21 +120,7 @@ const LocationSection: React.FC = () => {
           {/* Mapa de Google Maps */}
           <div className="rounded-lg overflow-hidden shadow-md">
             {businessLocation.googleMapsApiKey ? (
-              <LoadScript googleMapsApiKey={businessLocation.googleMapsApiKey}>
-                <GoogleMap
-                  mapContainerStyle={containerStyle}
-                  center={center}
-                  zoom={15}
-                  options={{
-                    zoomControl: true,
-                    streetViewControl: false,
-                    mapTypeControl: false,
-                    fullscreenControl: false,
-                  }}
-                >
-                  <Marker position={center} />
-                </GoogleMap>
-              </LoadScript>
+              <LocationMap />
             ) : (
               <div className="w-full h-96 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                 <p className="text-gray-500 dark:text-gray-400 text-center">

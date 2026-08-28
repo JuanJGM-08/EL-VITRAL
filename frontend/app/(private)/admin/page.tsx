@@ -81,6 +81,10 @@ export default function AdminPage() {
             <h2 className="text-xl font-bold text-blue-300 mb-2">Ver Agenda</h2>
             <p className="text-gray-300">Ver y confirmar citas de usuarios</p>
           </Link>
+          <Link href="/admin/proyectos" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow" style={{ backgroundColor: '#1e2939'}}>
+            <h2 className="text-xl font-bold text-blue-300 mb-2">Proyectos Destacados</h2>
+            <p className="text-gray-300">Crear, editar y publicar proyectos en la landing</p>
+          </Link>
         </div>
       </div>
     </div>

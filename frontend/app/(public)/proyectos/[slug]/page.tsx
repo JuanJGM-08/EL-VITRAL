@@ -1,93 +1,110 @@
-import { notFound } from "next/navigation";
+'use client';
+
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
-export async function generateStaticParams() {
-    const slugs = ['fachada-comercial', 'divisiones-corporativas', 'barandas-residenciales'];
-    return slugs.map((slug) => ({ slug }));
+interface Proyecto {
+  id: number;
+  titulo: string;
+  slug: string;
+  resumen: string;
+  descripcion: string | null;
+  imagen_url: string;
+  tecnologias: string | null;
 }
 
-const proyectos = {
-    'fachada-comercial' : {
-        titulo: 'Fachada Comercial',
-        descripcion: 'Instalacion de vidrio templado para centro comercial',
-        imagen: 'https://vidriostemplex.com/wp-content/uploads/2022/06/PHOTO-2021-11-26-11-01-21-1536x1152.jpg',
-        detalles: 'Este proyecto cosistio en la instalación de una fachada completa de vidrio templado de 12mm de espesor, con estructura de aluminio anodizado. Se uso un diseño de última generación que permite máxima transparencia y eficencia energética.',
-        tecnologias: ['Vidrio Templado', 'Aluminio Anodizado', 'Sellado Estructural'],
-    },
-    'divisiones-corporativas': {
-        titulo: 'Divisiones Corporativas',
-        descripcion: 'Separadores de ambiente en vidrio laminado acústico',
-        imagen: 'https://th.bing.com/th/id/R.e021e394864a3ee46e884b5f8c597845?rik=zkzo18kF9sPPNA&pid=ImgRaw&r=0',
-        detalles: 'Istalación de divisiones modulares en vidrio laminado con cámara acústica para oficinas corporativas. Se logró un ambiente moderno y funcional con excelente aisalamiento sonoro.',
-        tecnologias: ['Vidrio Laminado', 'Perfiles de Aluminio', 'Sistemas de Fijacion Invisibles'],
-    },
-    'barandas-residenciales': {
-        titulo: 'Barandas Residenciales',
-        descripcion: 'Diseño e instalacion de barandas de cristal para exteriores.',
-        imagen: 'https://lucor.es/wp-content/uploads/2023/01/barandillas-de-vidrio-view-crystal-03.jpg',
-        detalles: 'Barandas de vidrio templado sin perfiles, fijadas con sistemas ocultos que dan seguridad y elegancia para terrazas y balcones residenciales.',
-        tecnologias: ['Vidrio Templado', 'Sujeción Invisble', 'Acero Inoxidable'],
-    },
-};
+export default function ProyectoDetalle() {
+  const params = useParams<{ slug: string }>();
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+  const [proyecto, setProyecto] = useState<Proyecto | null>(null);
+  const [status, setStatus] = useState<'loading' | 'not-found' | 'error' | 'ready'>('loading');
 
-interface PageProps {
-    params: Promise<{ slug: string }>;
-}
+  useEffect(() => {
+    if (!slug) return;
 
-export default async function ProyectoDetalle({ params }: PageProps) {
-    const { slug } = await params;
-    const proyecto = proyectos[slug as keyof typeof proyectos];
+    const controller = new AbortController();
 
-    if(!proyecto) {
-        notFound();
+    async function loadProject() {
+      try {
+        setStatus('loading');
+        const response = await fetch(`/api/proyectos/${encodeURIComponent(slug)}`, {
+          signal: controller.signal,
+        });
+
+        if (response.status === 404) {
+          setStatus('not-found');
+          return;
+        }
+        if (!response.ok) throw new Error('No fue posible cargar el proyecto');
+
+        setProyecto(await response.json());
+        setStatus('ready');
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') setStatus('error');
+      }
     }
 
-    return (
-       <div className="min-h-screen py-12" style={{ backgroundColor: '#101828'}}>
-           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-               
-               <div className="rounded-lg shadow-md overflow-hidden" style={{ backgroundColor: '#1e2939'}}>
-                   <div className="p-8 md:p-12">
-                       <h1 className="text-4xl font-bold text-white mb-6">{proyecto.titulo}</h1>
-                       <div className="relative h-[500px] rounded-lg overflow-hidden mb-8 shadow-lg">
-                           <Image
-                           src={proyecto.imagen}
-                           alt={proyecto.titulo}
-                           fill
-                           className="object-cover"
-                           unoptimized
-                           />
-                       </div>
-                       <div className="grid grid-cols-1 lg:grid-cols-3 gap8">
-                           <div className="lg:col-span-2">
-                               <h2 className="text-2xl font-bold text-white mb-4">Sobre el Proyecto</h2>
-                               <p className="text-gray-200 leading-relaxed mb-6">{proyecto.detalles}</p>
+    loadProject();
+    return () => controller.abort();
+  }, [slug]);
 
-                               <h3 className="text-xl font-bold text-white mb-3">Tecnologías utilizadas</h3>
-                               <ul className="list-disc list-inside text-gray-200 mb-6">
-                                   {proyecto.tecnologias.map((tec, idx) => (
-                                     <li key={idx}>{tec}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                            
-                            <div className="bg-gray-800/50 p-6 rounded-lg shadow-md">
-                                <h3 className="text-lg font-bold text-white mb-4">¿Interesado en un proyecto similar?</h3>
-                                <p className="text-gray-200 mb-4">
-                                    Contactanos para recibir asesoría personalizada y cotización sin compromiso.
-                                </p>
-                                <Link 
-                                   href="/cotizar"
-                                   className="inline-block w-full text-center bg-primary text-blue-400 py-2 rounded-md hover:bg-secondary transition-colors"> 
-                                   Solicitar cotizacion 
-                                </Link>
-                            </div>
-                        </div>
-                   </div>
-               </div>
+  if (status === 'loading') return <StatusMessage message="Cargando proyecto..." />;
+  if (status === 'not-found') return <StatusMessage message="No encontramos el proyecto solicitado." />;
+  if (status === 'error' || !proyecto) return <StatusMessage message="No fue posible cargar este proyecto. Inténtalo nuevamente." />;
+
+  const tecnologias = (proyecto.tecnologias || '')
+    .split(',')
+    .map((tecnologia) => tecnologia.trim())
+    .filter(Boolean);
+
+  return (
+    <div className="min-h-screen bg-[#101828] py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-lg bg-[#1e2939] shadow-md">
+          <div className="p-8 md:p-12">
+            <h1 className="mb-6 text-4xl font-bold text-white">{proyecto.titulo}</h1>
+            <div className="relative mb-8 h-[500px] overflow-hidden rounded-lg shadow-lg">
+              <Image src={proyecto.imagen_url} alt={proyecto.titulo} fill className="object-cover" unoptimized />
             </div>
-        </div> 
-    );
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <h2 className="mb-4 text-2xl font-bold text-white">Sobre el proyecto</h2>
+                <p className="mb-6 leading-relaxed text-gray-200">{proyecto.descripcion || proyecto.resumen}</p>
+
+                {tecnologias.length > 0 && (
+                  <>
+                    <h3 className="mb-3 text-xl font-bold text-white">Materiales y tecnologías utilizadas</h3>
+                    <ul className="mb-6 list-inside list-disc text-gray-200">
+                      {tecnologias.map((tecnologia) => <li key={tecnologia}>{tecnologia}</li>)}
+                    </ul>
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-lg bg-gray-800/50 p-6 shadow-md">
+                <h3 className="mb-4 text-lg font-bold text-white">¿Interesado en un proyecto similar?</h3>
+                <p className="mb-4 text-gray-200">Contáctanos para recibir asesoría personalizada y una cotización sin compromiso.</p>
+                <Link href="/cotizar" className="inline-block w-full rounded-md bg-blue-600 py-2 text-center text-white transition-colors hover:bg-blue-500">
+                  Solicitar cotización
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusMessage({ message }: { message: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#101828] px-4">
+      <div className="rounded-xl bg-[#1e2939] px-6 py-5 text-center text-gray-200 shadow-lg">
+        <p>{message}</p>
+        <Link href="/" className="mt-4 inline-block text-cyan-400 hover:text-cyan-300">Volver al inicio</Link>
+      </div>
+    </div>
+  );
 }
