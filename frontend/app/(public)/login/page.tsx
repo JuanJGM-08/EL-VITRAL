@@ -1,6 +1,5 @@
 'use client';
-import { FormEvent, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
@@ -9,13 +8,22 @@ const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '';
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth <= 360);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -237,7 +245,9 @@ export default function LoginPage() {
                 <div className="flex justify-center bg-gray-900/90 rounded-xl p-3 border border-gray-800">
                   <ReCAPTCHA
                     ref={recaptchaRef}
+                    key={isSmallScreen ? 'compact' : 'normal'}
                     sitekey={siteKey}
+                    size={isSmallScreen ? 'compact' : 'normal'}
                     onChange={(token) => setRecaptchaToken(token)}
                     onExpired={resetRecaptcha}
                     onErrored={() => {

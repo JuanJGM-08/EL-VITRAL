@@ -78,7 +78,6 @@ export default function PerfilPage() {
                   {user.rol}
                 </span>
               </div>
-
               <div className="mt-8 space-y-3">
                 <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-3.5">
                   <p className="text-[10px] text-gray-400">Correo electrónico</p>
@@ -132,7 +131,7 @@ export default function PerfilPage() {
               <div className="rounded-xl border border-gray-800 bg-gray-900/40 p-5">
                 <h2 className="text-sm font-bold text-white mb-2">Tu espacio está listo</h2>
                 <p className="text-xs text-gray-400 leading-relaxed">
-                  Puedes revisar tus cotizaciones, actualizar tus datos y mantener tu cuenta segura[cite: 8]. Si deseas cambiar tu información de contacto, contáctanos y te apoyamos[cite: 8].
+                  Puedes revisar tus cotizaciones, actualizar tus datos y mantener tu cuenta segura. Si deseas cambiar tu información de contacto, contáctanos y te apoyamos.
                 </p>
               </div>
             </div>

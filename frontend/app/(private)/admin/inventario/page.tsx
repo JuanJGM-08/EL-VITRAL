@@ -31,10 +31,6 @@ export default function InventarioPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     setLoading(true);
     try {
@@ -62,6 +58,13 @@ export default function InventarioPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadData();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -101,6 +104,16 @@ export default function InventarioPage() {
       setError('Error al enviar el movimiento.');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: '#101828' }}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-white text-xl">Cargando Inventario...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#101828' }}>
@@ -162,7 +175,7 @@ export default function InventarioPage() {
                 <select
                   value={selectedProduct}
                   onChange={(event) => setSelectedProduct(Number(event.target.value) || '')}
-                  className="w-full rounded-md border border-gray-700 bg-gray-900 text-white px-3 py-2"
+                  className="w-full rounded-md border border-gray-700 bg-gray-900 text-white px-3 py-2 min-h-[44px]"
                 >
                   <option value="">Selecciona un producto</option>
                   {productos.map((producto) => (
@@ -180,7 +193,7 @@ export default function InventarioPage() {
                   value={cantidad}
                   min={1}
                   onChange={(event) => setCantidad(Number(event.target.value))}
-                  className="w-full rounded-md border border-gray-700 bg-gray-900 text-white px-3 py-2"
+                  className="w-full rounded-md border border-gray-700 bg-gray-900 text-white px-3 py-2 min-h-[44px]"
                 />
               </div>
 
@@ -189,7 +202,7 @@ export default function InventarioPage() {
                 <textarea
                   value={descripcion}
                   onChange={(event) => setDescripcion(event.target.value)}
-                  className="w-full rounded-md border border-gray-700 bg-gray-900 text-white px-3 py-2"
+                  className="w-full rounded-md border border-gray-700 bg-gray-900 text-white px-3 py-2 min-h-[44px]"
                   rows={3}
                 />
               </div>
@@ -199,7 +212,7 @@ export default function InventarioPage() {
 
               <button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-500 text-white rounded-md px-4 py-2 transition-colors"
+                className="w-full bg-green-600 hover:bg-green-500 text-white rounded-md px-4 py-2 transition-colors min-h-[44px]"
               >
                 Registrar entrada
               </button>

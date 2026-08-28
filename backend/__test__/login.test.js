@@ -9,7 +9,8 @@ jest.mock('../lib/auth.js', () => ({
   comparePassword: jest.fn(),
   sanitizeEmail: jest.fn((email) => String(email ?? '').trim().toLowerCase()),
   sanitizeString: jest.fn((value) => String(value ?? '').trim()),
-  generateToken: jest.fn(() => 'fake-token'),
+  generateAccessToken: jest.fn(() => 'fake-access-token'),
+  generateRefreshToken: jest.fn(() => 'fake-refresh-token'),
   getUserFromRequest: jest.fn(),
   isAdmin: jest.fn((user) => user?.rol === 'admin'),
   verifyToken: jest.fn(),
@@ -18,7 +19,8 @@ jest.mock('../lib/auth.js', () => ({
 const { query } = require('../lib/db.js');
 const {
   comparePassword,
-  generateToken,
+  generateAccessToken,
+  generateRefreshToken,
   sanitizeEmail,
 } = require('../lib/auth.js');
 
@@ -54,12 +56,13 @@ describe('Login - POST /api/auth/login', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBeDefined();
 
-    expect(generateToken).toHaveBeenCalledWith({
+    expect(generateAccessToken).toHaveBeenCalledWith({
       id: 1,
       rol: 'usuario',
       nombre: 'Juan Perez',
       email: 'juan@test.com',
     });
+    expect(generateRefreshToken).toHaveBeenCalledWith({ id: 1 });
 
     expect(res.headers['set-cookie']).toBeDefined();
   });
@@ -120,6 +123,7 @@ describe('Login - POST /api/auth/login', () => {
 
     expect(comparePassword).not.toHaveBeenCalled();
 
-    expect(generateToken).not.toHaveBeenCalled();
+    expect(generateAccessToken).not.toHaveBeenCalled();
+    expect(generateRefreshToken).not.toHaveBeenCalled();
   });
 });

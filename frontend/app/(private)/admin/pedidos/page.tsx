@@ -67,10 +67,9 @@ export default function AdminPedidosPage() {
 
   const [showFechaModal, setShowFechaModal] = useState(false);
   const [fechaEntregaInput, setFechaEntregaInput] = useState('');
-
-  useEffect(() => {
-    fetchPedidos();
-  }, []);
+  
+  // Estado para acciones móviles
+  const [mobileActionPedido, setMobileActionPedido] = useState<Pedido | null>(null);
 
   const fetchPedidos = async () => {
     try {
@@ -99,6 +98,13 @@ export default function AdminPedidosPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchPedidos();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const actualizarEstado = async (pedidoId: number, nuevoEstado: string) => {
     const pedido = pedidos.find(p => p.id === pedidoId);
@@ -359,7 +365,8 @@ export default function AdminPedidosPage() {
                               </td>
 
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div className="space-y-3">
+                                {/* Desktop actions */}
+                                <div className="hidden md:block space-y-3">
                                   <div>
                                     <label className="block text-xs text-gray-400 mb-1">Estado del proceso</label>
                                     <select
@@ -389,9 +396,20 @@ export default function AdminPedidosPage() {
                                   </div>
                                   <button
                                     onClick={() => descargarPdfPedido(pedido.id)}
-                                    className="w-full text-left text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                                    className="w-full text-left text-cyan-400 hover:text-cyan-300 text-sm font-medium py-2"
                                   >
                                     Exportar PDF
+                                  </button>
+                                </div>
+                                
+                                {/* Mobile actions button */}
+                                <div className="md:hidden">
+                                  <button
+                                    onClick={() => setMobileActionPedido(pedido)}
+                                    className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-lg bg-gray-700 hover:bg-gray-600 px-4 py-2 text-white transition-colors border border-gray-600"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">settings</span>
+                                    Acciones
                                   </button>
                                 </div>
                               </td>
@@ -465,7 +483,7 @@ export default function AdminPedidosPage() {
 
       {/* Modal de confirmación */}
       {showConfirmModal && confirmAction && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60]">
           <div className="rounded-lg shadow-xl max-w-md w-full mx-4" style={{ backgroundColor: '#1e2939' }}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -475,7 +493,7 @@ export default function AdminPedidosPage() {
                     setShowConfirmModal(false);
                     setConfirmAction(null);
                   }}
-                  className="text-gray-400 hover:text-gray-200 text-2xl"
+                  className="text-gray-400 hover:text-gray-200 text-2xl min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   ×
                 </button>
@@ -483,21 +501,93 @@ export default function AdminPedidosPage() {
 
               <div className="text-center py-4">
                 <p className="text-gray-300 mb-6">{confirmAction.mensaje}</p>
-                <div className="flex gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
                     onClick={() => {
                       setShowConfirmModal(false);
                       setConfirmAction(null);
                     }}
-                    className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg transition-colors border border-slate-500"
+                    className="w-full sm:w-auto min-h-[44px] px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg transition-colors border border-slate-500"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={confirmarCambio}
-                    className="px-6 py-3 bg-primary hover:bg-secondary text-white font-semibold rounded-lg transition-colors border border-sky-500 shadow-lg shadow-sky-500/25"
+                    className="w-full sm:w-auto min-h-[44px] px-6 py-3 bg-primary hover:bg-secondary text-white font-semibold rounded-lg transition-colors border border-sky-500 shadow-lg shadow-sky-500/25"
                   >
-                    Confirmar Cambio
+                    Confirmar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de acciones para móvil */}
+      {mobileActionPedido && (
+        <div className="fixed inset-0 bg-black/80 flex items-end justify-center z-50 md:hidden p-4">
+          <div className="rounded-2xl shadow-xl w-full mx-auto" style={{ backgroundColor: '#1e2939' }}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Acciones del Pedido</h2>
+                  <p className="text-gray-400 text-sm">Pedido #{mobileActionPedido.id}</p>
+                </div>
+                <button
+                  onClick={() => setMobileActionPedido(null)}
+                  className="text-gray-400 hover:text-gray-200 text-3xl min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Estado del proceso</label>
+                  <select
+                    value={mobileActionPedido.estado}
+                    onChange={(e) => {
+                      actualizarEstado(mobileActionPedido.id, e.target.value);
+                      setMobileActionPedido(null);
+                    }}
+                    className="w-full min-h-[48px] rounded-xl border border-gray-600 bg-gray-800 text-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary shadow-sm appearance-none"
+                  >
+                    <option value="pendiente">Pendiente</option>
+                    <option value="en_proceso">En proceso</option>
+                    <option value="listo">Listo</option>
+                    <option value="entregado" disabled={!mobileActionPedido.fecha_entrega}>
+                      Entregado{!mobileActionPedido.fecha_entrega ? ' (requiere fecha)' : ''}
+                    </option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Estado del pago</label>
+                  <select
+                    value={mobileActionPedido.pago}
+                    onChange={(e) => {
+                      actualizarPago(mobileActionPedido.id, e.target.value);
+                      setMobileActionPedido(null);
+                    }}
+                    className="w-full min-h-[48px] rounded-xl border border-gray-600 bg-gray-800 text-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary shadow-sm appearance-none"
+                  >
+                    <option value="pendiente">Pendiente</option>
+                    <option value="anticipo">Anticipo</option>
+                    <option value="pagado">Pagado</option>
+                  </select>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      descargarPdfPedido(mobileActionPedido.id);
+                      setMobileActionPedido(null);
+                    }}
+                    className="w-full min-h-[48px] flex items-center justify-center gap-2 text-cyan-400 bg-cyan-900/30 hover:bg-cyan-900/50 rounded-xl px-4 text-base font-semibold transition-colors border border-cyan-800/50"
+                  >
+                    <span className="material-symbols-outlined">picture_as_pdf</span>
+                    Exportar a PDF
                   </button>
                 </div>
               </div>

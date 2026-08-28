@@ -32,8 +32,8 @@ export async function middleware(request: NextRequest) {
 
   if (path.startsWith('/admin')) {
     if (!token) return NextResponse.redirect(new URL('/login', request.url));
-    const decoded = jwt.decode(token as string) as any;
-    if (!decoded) return NextResponse.redirect(new URL('/login', request.url));
+    const decoded = jwt.decode(token) as jwt.JwtPayload | null;
+    if (!decoded || typeof decoded === 'string') return NextResponse.redirect(new URL('/login', request.url));
     if (decoded.rol !== 'admin') {
       return NextResponse.redirect(new URL('/', request.url));
     }

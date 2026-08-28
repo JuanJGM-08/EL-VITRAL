@@ -122,6 +122,7 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" onClick={closeMobileMenu}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.jpeg" alt="Logo El Vitral" className="h-12 w-auto" />
             </Link>
           </div>
@@ -196,7 +197,7 @@ export default function Navbar() {
             {desktopMenuOpen && (
               <div
                 ref={desktopMenuRef}
-                className="absolute right-0 top-12 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700 z-50"
+                className="absolute right-0 top-12 mt-2 w-48 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700 z-50"
               >
                 {!user ? (
                   <>
@@ -267,7 +268,9 @@ export default function Navbar() {
             <button
               ref={mobileButtonRef}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-md text-gray-600 dark:text-gray-300 focus:outline-none"
+              className="p-3 rounded-md text-gray-600 dark:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Abrir menú principal"
+              aria-expanded={mobileMenuOpen}
             >
               <span className="material-symbols-outlined text-2xl">
                 {mobileMenuOpen ? 'close' : 'menu'}
@@ -277,33 +280,33 @@ export default function Navbar() {
             {mobileMenuOpen && (
               <div
                 ref={mobileMenuRef}
-                className="absolute right-4 top-16 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700 z-50"
+                className="absolute right-4 left-4 top-16 mt-2 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700 z-50 max-h-[80vh] overflow-y-auto"
               >
                 {/* Enlaces principales (sin Admin) */}
                 <Link
                   href="/"
-                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={closeMobileMenu}
                 >
                   Inicio
                 </Link>
                 <Link
                   href="/catalogo"
-                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={closeMobileMenu}
                 >
                   Catálogo
                 </Link>
                 <Link
                   href="/cotizar"
-                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={closeMobileMenu}
                 >
                   Cotizar
                 </Link>
                 <Link
                   href="/sobre-nosotros"
-                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={closeMobileMenu}
                 >
                   Sobre Nosotros
@@ -314,14 +317,14 @@ export default function Navbar() {
                     <hr className="my-1 border-gray-200 dark:border-gray-700" />
                     <Link
                       href="/login"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={closeMobileMenu}
                     >
                       Iniciar Sesión
                     </Link>
                     <Link
                       href="/registro"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={closeMobileMenu}
                     >
                       Registrarse
@@ -332,21 +335,21 @@ export default function Navbar() {
                     <hr className="my-1 border-gray-200 dark:border-gray-700" />
                     <Link
                       href="/perfil"
-                      className="block px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={closeMobileMenu}
                     >
                       Mi Perfil ({user.nombre})
                     </Link>
                     <Link
                       href="/mis-pedidos"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={closeMobileMenu}
                     >
                       Mis Pedidos
                     </Link>
                     <Link
                       href="/cotizaciones"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={closeMobileMenu}
                     >
                       Mis Cotizaciones
@@ -358,14 +361,14 @@ export default function Navbar() {
                           closeMobileMenu();
                           router.push('/admin');
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Panel Admin
                       </button>
                     )}
                     <button
                       onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       Cerrar sesión
                     </button>
